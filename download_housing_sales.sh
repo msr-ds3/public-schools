@@ -28,17 +28,17 @@ wget -r -A .xls http://www1.nyc.gov/site/finance/taxes/property-rolling-sales-da
 #find -depth -type d -empty -exec rmdir {} \;
 
 #Moves files to the housing folder
-mv ~/housing/www1.nyc.gov/assets/finance/downloads/pdf/rolling_sales/* ~/housing
+mv housing/www1.nyc.gov/assets/finance/downloads/pdf/rolling_sales/rollingsales_*.xls housing/
 
 #Delete remainder empty folders
 find -depth -type d -empty -exec rmdir {} \; 
 
 #Rename files
-mv ~/housing/rollingsales_bronx.xls ~/housing/bronx.xls
-mv ~/housing/rollingsales_brooklyn.xls ~/housing/brooklyn.xls
-mv ~/housing/rollingsales_manhattan.xls ~/housing/manhattan.xls
-mv ~/housing/rollingsales_queens.xls ~/housing/queens.xls
-mv ~/housing/rollingsales_statenisland.xls ~/housing/statenisland.xls
+mv housing/rollingsales_bronx.xls housing/bronx.xls
+mv housing/rollingsales_brooklyn.xls housing/brooklyn.xls
+mv housing/rollingsales_manhattan.xls housing/manhattan.xls
+mv housing/rollingsales_queens.xls housing/queens.xls
+mv housing/rollingsales_statenisland.xls housing/statenisland.xls
 
 # change to the data directory
 #Still dont know what this is cd $DATA_DIR
