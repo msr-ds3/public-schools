@@ -10,10 +10,10 @@ library(ggplot2)
 #Change this file to a CSV file
 
 #Load file containing directory and basic info of all high schools
-schooldirectory <- read.csv("~/public-schools/School Files/schooldirectory.csv", header = TRUE)
+schooldirectory <- read.csv("~/public-schools/schools/schooldirectory.csv", header = TRUE)
 
 #Load file containing school quality report
-schooltarget <- read_excel("~/public-schools/School Files/schoolratings.xlsx", col_names = TRUE, skip = 1)
+schooltarget <- read_excel("~/public-schools/schools/schoolratings.xlsx", col_names = TRUE, skip = 1)
 
 #Renaming column to have same name
 colnames(schooldirectory)[1] <- "DBN"
