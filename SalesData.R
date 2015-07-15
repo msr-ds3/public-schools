@@ -8,11 +8,10 @@ library(readxl)
 # set the data directory
 data_dir <- '.'
 
-
 ########################################
 # load and clean trip data
 ########################################
-xlss <- Sys.glob(sprintf('%s/2015/*.xls', data_dir))
+xlss <- Sys.glob(sprintf('%s/*.xls', data_dir))
 vec <- c("BOROUGH", "NEIGHBORHOOD", "BUILDING_CATEGORY", "TAX_CLASS", 
   "BLOCK", "LOT", "EASEMENT", "BUILDING_CLASS", "ADDRESS", "APT_NUMBER", "ZIP_CODE", "RES_UNITS", "COM_UNITS", "TOTAL_UNITS", 
   "LAND_SQ_FT", "BUILD_SQ_FT", "YEAR_BUILT", "TAX_CLASS_AT_SALE", 
@@ -58,3 +57,18 @@ avgPriceByBorough
 ## Average sale price by neighborhood, only counting where sale price > 0.
 avgPriceByNeighborhood <- dfc %>% group_by(NEIGHBORHOOD) %>% summarize(avgPrice = mean(SALE_PRICE))
 View(avgPriceByNeighborhood)
+
+
+
+################################################################
+### The names of these in the data file sales.Rdata are thus ###
+################################################################
+# The full sales data, without any removals
+fullSales <- df2
+
+# The sales only on housing buildings
+homeSales <- df3
+
+# Home Data that contains a real sale/no sales <= 0
+trueHomeSales <- dfc
+###########################
