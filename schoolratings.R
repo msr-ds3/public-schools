@@ -3,11 +3,8 @@ library(readxl)
 library(ggplot2)
 #################
 #Get Data 
-#Download this file
-#http://schools.nyc.gov/NR/rdonlyres/14B7086D-9EE8-42FB-9D10-2160BE72C1EA/0/2013_2014_All_Schools_SQR_Results_2015_01_20.xlsx
-#and this one
-#http://www.nyc.gov/html/doed/downloads/datasets/DOE_LocationMasterData_001.xls
-#Change this file to a CSV file
+
+#########CHANGE SCHOOL DIRECTORY TO A CSV FILE#################################
 
 #Load file containing directory and basic info of all high schools
 schooldirectory <- read.csv("~/public-schools/schools/schooldirectory.csv", header = TRUE)
