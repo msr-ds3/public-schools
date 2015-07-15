@@ -22,6 +22,6 @@ wget http://www.nyc.gov/html/doed/downloads/datasets/DOE_LocationMasterData_001.
 
 #Change name
 
-mv ~/public-schools/schools/2013_2014_All_Schools_SQR_Results_2015_01_20.xlsx ~/public-schools/schools/schoolratings.xlsx
+mv 2013_2014_All_Schools_SQR_Results_2015_01_20.xlsx schoolratings.xlsx
 
-mv ~/public-schools/schools/DOE_LocationMasterData_001.xls ~/public-schools/schools/schooldirectory.xls
+mv DOE_LocationMasterData_001.xls schooldirectory.xls
