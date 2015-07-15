@@ -7,7 +7,7 @@
 #
 # requirements: curl or wget
 #
-# author: Group project supervised by jake hofman
+# author: Thomas Patino with Group project supervised by jake hofman
 #
 
 # set a relative path for the housing data
@@ -34,11 +34,11 @@ mv housing/www1.nyc.gov/assets/finance/downloads/pdf/rolling_sales/rollingsales_
 find -depth -type d -empty -exec rmdir {} \; 
 
 #Rename files
-mv housing/rollingsales_bronx.xls housing/bronx.xls
-mv housing/rollingsales_brooklyn.xls housing/brooklyn.xls
-mv housing/rollingsales_manhattan.xls housing/manhattan.xls
-mv housing/rollingsales_queens.xls housing/queens.xls
-mv housing/rollingsales_statenisland.xls housing/statenisland.xls
+mv rollingsales_bronx.xls bronx.xls
+mv rollingsales_brooklyn.xls brooklyn.xls
+mv rollingsales_manhattan.xls manhattan.xls
+mv rollingsales_queens.xls queens.xls
+mv rollingsales_statenisland.xls statenisland.xls
 
 # change to the data directory
 #Still dont know what this is cd $DATA_DIR
