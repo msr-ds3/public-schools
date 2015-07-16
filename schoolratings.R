@@ -84,3 +84,13 @@ Cardinal_Environment<- data_frame(Cardinal_Environment)
 #x1 =unclass(factor(schooldata$`Environment Rating`))
 
 attach_toSchool_data <- cbind(schooldata, Cardinal_Environment)
+
+Cardinal_Achievement <- as.factor(schooldata$`Achievement Rating`)
+levels(Cardinal_Achievement ) <- 1:length(levels(Cardinal_Achievement ))
+Cardinal_Achievement <- as.numeric(Cardinal_Achievement)
+Cardinal_Achievement <- data_frame(Cardinal_Achievement)
+
+#x1 =unclass(factor(schooldata$`Environment Rating`))
+
+attach_toSchool_data1 <- cbind(attach_toSchool_data, Cardinal_Achievement)
+View
