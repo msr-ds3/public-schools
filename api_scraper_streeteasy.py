@@ -29,7 +29,7 @@ with open('mycsvfile3.csv', 'a') as f:
                    #create api request based on the parameters 
                    print api_request                    
                    response = requests.get(api_request)
-                   sleep(5)
+                   sleep(45)
                    data = response.json()
                    print data                    
                    dict2 = {'school':school, 'housing': housing, 'sqft':sqft, 'beds':nums}
