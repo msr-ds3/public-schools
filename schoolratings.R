@@ -1,10 +1,14 @@
 #Load libraries needed
 library(readxl)
 library(ggplot2)
+library(dplyr)
 #################
-#Get Data 
 
-#########CHANGE SCHOOL DIRECTORY TO A CSV FILE#################################
+#################################################################################
+################↓↓↓↓↓↓YOU MUST DO THIS STEP MANUALLY↓↓↓↓↓↓###############
+################CHANGE SCHOOL DIRECTORY TO A CSV FILE############################
+#################################################################################
+
 
 #Load file containing directory and basic info of all high schools
 schooldirectory <- read.csv("~/public-schools/schools/schooldirectory.csv", header = TRUE)
@@ -54,3 +58,29 @@ qplot(factor(`Environment Rating`), data=schooldata, geom="bar", fill=factor(`En
 #Plotting the different environment by zip code. 
 qplot(factor(`Environment Rating`), data=schooldata, geom="bar") + facet_wrap(~ `Zip`)
 
+##########################
+#TO DO 
+##########################
+
+#Make scatter plot of environment and achievement rating
+plot(schooldata$`Environment Rating`, schooldata$`Achievement Rating`)
+
+
+#Achievement by school type
+
+#Park Slope Comparison
+
+parkslope <- filter(schooldata, Zip == c(11217, 11215))
+qplot(factor(`Environment Rating`), data=parkslope, fill=factor(`Zip`))
+
+
+
+
+
+
+
+l=unique(c(as.character(schooldata$`Environment Rating`), as.character(schooldata$`Achievement Rating`)))
+
+environments <- data.frame(Cardinal_Environment=as.numeric(factor(schooldata$`Environment Rating`, levels=l)), Cardinal_Achievement=as.numeric(factor(schooldata$`Achievement Rating`, levels=l)))
+
+attach_toSchool_data <- cbind(schooldata, environments)

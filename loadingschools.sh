@@ -3,11 +3,9 @@
 # description:
 #   fetches schools files from the NYC Department of Education
 #
-# usage: ./download_housing_sales.sh
-#
 # requirements: curl or wget
 #
-# author: Thomas Patino with group, supervised by jake hofman
+# author: Thomas Patino supervised by jake hofman
 
 #Create directory
 mkdir schools
