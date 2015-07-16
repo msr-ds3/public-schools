@@ -74,3 +74,13 @@ plot(schooldata$`Environment Rating`, schooldata$`Achievement Rating`)
 
 parkslope <- filter(schooldata, Zip == c(11217, 11215))
 qplot(factor(`Environment Rating`), data=parkslope, fill=factor(`Zip`))
+
+
+Cardinal_Environment <- as.factor(schooldata$`Environment Rating`)
+levels(Cardinal_Environment) <- 1:length(levels(Cardinal_Environment))
+Cardinal_Environment <- as.numeric(Cardinal_Environment)
+Cardinal_Environment<- data_frame(Cardinal_Environment)
+
+#x1 =unclass(factor(schooldata$`Environment Rating`))
+
+attach_toSchool_data <- cbind(schooldata, Cardinal_Environment)
