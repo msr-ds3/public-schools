@@ -68,29 +68,19 @@ plot(schooldata$`Environment Rating`, schooldata$`Achievement Rating`)
 
 #Achievement by school type
 
-
-
 #Park Slope Comparison
 
 parkslope <- filter(schooldata, Zip == c(11217, 11215))
 qplot(factor(`Environment Rating`), data=parkslope, fill=factor(`Zip`))
 
 
-Cardinal_Environment <- as.factor(schooldata$`Environment Rating`)
-levels(Cardinal_Environment) <- 1:length(levels(Cardinal_Environment))
-Cardinal_Environment <- as.numeric(Cardinal_Environment)
-Cardinal_Environment<- data_frame(Cardinal_Environment)
 
-#x1 =unclass(factor(schooldata$`Environment Rating`))
 
-attach_toSchool_data <- cbind(schooldata, Cardinal_Environment)
 
-Cardinal_Achievement <- as.factor(schooldata$`Achievement Rating`)
-levels(Cardinal_Achievement ) <- 1:length(levels(Cardinal_Achievement ))
-Cardinal_Achievement <- as.numeric(Cardinal_Achievement)
-Cardinal_Achievement <- data_frame(Cardinal_Achievement)
 
-#x1 =unclass(factor(schooldata$`Environment Rating`))
 
-attach_toSchool_data1 <- cbind(attach_toSchool_data, Cardinal_Achievement)
-View
+l=unique(c(as.character(schooldata$`Environment Rating`), as.character(schooldata$`Achievement Rating`)))
+
+environments <- data.frame(Cardinal_Environment=as.numeric(factor(schooldata$`Environment Rating`, levels=l)), Cardinal_Achievement=as.numeric(factor(schooldata$`Achievement Rating`, levels=l)))
+
+attach_toSchool_data <- cbind(schooldata, environments)
