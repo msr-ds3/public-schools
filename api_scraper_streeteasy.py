@@ -5,21 +5,18 @@ import urllib2
 import sys
 from time import sleep
 
+#checks if user inputs all necessary parameters
 if len(sys.argv) !=6:
 	print "usage:  %s api_key bed_list school_list sqfts type_list" % sys.argv[0]
 	sys.exit(1)
 
-#key_and_format = '&key=ceaf51330ebaaf51a83386e11a7092e1a0bdd8aa&format=json'
-
+#params (input separate by comma if multiple data involves)
 api_key = sys.argv[1]
 bed_list = sys.argv[2].split(',')
 school_list= sys.argv[3].split(',')
 sqfts = sys.argv[4].split(',')
 type_list =  sys.argv[5].split(',')
-#bed_list = (1,2,3)
-#school_list = ('ps321-brooklyn','ps107-brooklyn')
-#sqfts = (800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000)
-#type_list = ('coops','condos','houses','multi-family')
+
 flag = 0
 
 base = 'http://streeteasy.com/nyc/api/sales/data?criteria='
