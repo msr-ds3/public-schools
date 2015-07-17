@@ -65,22 +65,29 @@ qplot(factor(`Environment Rating`), data=schooldata, geom="bar") + facet_wrap(~ 
 #Make scatter plot of environment and achievement rating
 plot(schooldata$`Environment Rating`, schooldata$`Achievement Rating`)
 
-
-#Achievement by school type
-
 #Park Slope Comparison
 
 parkslope <- filter(schooldata, Zip == c(11217, 11215))
 qplot(factor(`Environment Rating`), data=parkslope, fill=factor(`Zip`))
 
+#Achievement by school type
 #converting environment and achievement to numerics (1,2,3,4,5)
 l=unique(c(as.character(schooldata$`Environment Rating`), as.character(schooldata$`Achievement Rating`)))
 
-environments <- data.frame(Cardinal_Environment=as.numeric(factor(schooldata$`Environment Rating`, levels=l)), Cardinal_Achievement=as.numeric(factor(schooldata$`Achievement Rating`, levels=l)))
+environments <- data.frame(Cardinal_Environment=as.numeric(factor(schooldata$`Environment Rating`, levels=l)), 
+                           Cardinal_Achievement=as.numeric(factor(schooldata$`Achievement Rating`, levels=l)))
 
+#attach environment and achievement back to schooldata
 attach_toSchool_data <- cbind(schooldata, environments)
-View(attach_toSchool_data)
+
 #group by geographical zip code to find the mean of environment and achievement
 environment_achievement<-aggregate(attach_toSchool_data[, 60:61], list(attach_toSchool_data$Geographical.District.Code), mean)
+
 #plotting Achievement vs Environment
-ggplot(environment_achievement, aes(x=Cardinal_Environment, y=Cardinal_Achievement, color = factor(Group.1)), size = Cardinal_Achievement) + geom_point() 
+ggplot(environment_achievement, aes(x=Cardinal_Environment, y=Cardinal_Achievement, 
+                                    color = factor(Group.1)), size = Cardinal_Achievement) + 
+  geom_point() + 
+  geom_abline() +
+  xlab("Environment Rating") +
+  ylab("Achievement Rating") +
+  ggtitle("Achievement vs Environment rating by geo zip")
