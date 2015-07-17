@@ -38,7 +38,7 @@ Main <- function() {
   school_zone_boundaries <- create_school_mapdata(filepath, shapefile)
   
   #address_input_df<- read.csv(filename)
-  address_input_df = head(trueHomeSales, 2500)
+  address_input_df = head(trueHomeSales, 5)
   address_data <- get_addresses(address_input_df)
   
   
