@@ -38,10 +38,10 @@ Main <- function() {
   school_zone_boundaries <- create_school_mapdata(filepath, shapefile)
   
   #address_input_df<- read.csv(filename)
-  address_input_df = head(trueHomeSales, 5)
+  load('../sales.RData')
+  address_input_df <- filter(fullSales, ZIP_CODE == 11215 | ZIP_CODE == 11217)
   address_data <- get_addresses(address_input_df)
-  
-  
+
   proj4string(address_data) <- proj4string(school_zone_boundaries)
   
   # Match each address to a school zone. 
@@ -49,7 +49,8 @@ Main <- function() {
   
   # create the final merged df with both address and school zone information
   merged_data <- cbind(address_data, matched_school_zones)
-  write.csv(merged_data, "addresses_with_school_zones.csv")
+  write.csv(merged_data, "park_slope_addresses_with_school_zones.csv")
+
   # Mapping school zones, for fun
   schools_df <- fortify(school_zone_boundaries)
   nyc_map <- create_city_basemap("New York, NY")
