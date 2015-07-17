@@ -26,10 +26,10 @@ for schooly in school_list: #go through defined schools
 
     # check for existing file
     # if exists, don't write header and create a set of previously covered criteria
-    write_header = 1
     previous_criteria = set()
+    write_header = 1
     if os.path.exists(filename):
-        write_header = 0
+	write_header = 0
         with open(filename, 'r') as f:
                 reader = csv.DictReader(f, quotechar='"', delimiter=',')
                 previous_criteria = set([row["criteria"] + "|housing1:" + row["housing"] for row in reader])
@@ -56,6 +56,6 @@ for schooly in school_list: #go through defined schools
                         w = csv.DictWriter(f, dict2.keys(), quotechar='"', delimiter=',')
                         if write_header == 1:#to write header only one time check if flag is 0
                                 w.writeheader()
-                                write_header = 1
+                                write_header = 0
                         w.writerow(dict2)
                         f.flush()# see line by line in a file
