@@ -81,7 +81,8 @@ environments <- data.frame(Cardinal_Environment=as.numeric(factor(schooldata$`En
 attach_toSchool_data <- cbind(schooldata, environments)
 
 #group by geographical zip code to find the mean of environment and achievement
-environment_achievement<-aggregate(attach_toSchool_data[, 60:61], list(attach_toSchool_data$Geographical.District.Code), mean)
+environment_achievement<-aggregate(attach_toSchool_data[, 60:61], 
+                                    list(attach_toSchool_data$Geographical.District.Code), mean)
 
 #plotting Achievement vs Environment
 ggplot(environment_achievement, aes(x=Cardinal_Environment, y=Cardinal_Achievement, 
