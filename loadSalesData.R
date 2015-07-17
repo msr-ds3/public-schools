@@ -56,6 +56,38 @@ homeSales <- df3
 trueHomeSales <- dfc
 ###########################
 
+###############################
+# Create refactored data
+###############################
+
+# Add Data Frame Fields for IsRes and IsIndv
+# Rename file for shortness
+df <- fullSales
+
+##### Separate out the APT_NUM #####
+df <- separate(df, ADDRESS, into = c("ADDRESS", "APTNUM"), sep = ",", remove = TRUE, extra = "drop")
+
+# Change empty strings/NA to something. Might not be needed.
+df$APTNUM[is.na(df$APTNUM)] <- " "
+df$APT_NUMBER[df$APT_NUMBER == ""] <- " "
+
+# Now merge into one column, making a unified APT_NUM column
+df <- unite(df, col = "APT_NUM", c(10,11), sep = " ", remove = TRUE)
+
+# Convert empty strings back to NA for making an isIndividual colum
+df$APT_NUM[df$APT_NUM == "              "] <- NA
+
+# Separate by individuality or not
+df <- mutate(df, "isRes" = (BC_NUM <= 4 | BC_NUM == 7 | BC_NUM == 10 | BC_NUM == 14))
+
+# Separate by residential or not
+df <- mutate(df, "isIndv" = (BC_NUM <= 3 | (BC_NUM == 7 & !is.na(APT_NUM)) | (BC_NUM == 10 & !is.na(APT_NUM)) | (BC_NUM == 14 & !is.na(APT_NUM)) ))
+
+# Separate into 3 frames, including the true home sales and the home sales
+fullSalesRef <- df
+homeSalesRef <- df[df$BC_NUM<17 & df$BC_NUM != 5 & df$BC_NUM != 6,]
+trueHomeSalesRef <- homeSalesRef[homeSalesRef$SALE_PRICE > 0, ]
+
 
 #################################
 # Save the files
@@ -63,3 +95,5 @@ trueHomeSales <- dfc
 
 # To save the files yourself, otherwise you already have them
 save(fullSales, homeSales, trueHomeSales, file = sprintf('%s/sales.RData', data_dir))
+# Refactored save
+save(fullSalesRef, homeSalesRef, trueHomeSalesRef, file = sprintf('%s/refactoredSales.RData', data_dir))
