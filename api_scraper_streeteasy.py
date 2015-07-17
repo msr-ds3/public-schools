@@ -2,15 +2,14 @@ import requests
 import pprint
 import csv
 import urllib2
+from time import sleep
+
 import sys
 from time import sleep
 
-#checks if user inputs all necessary parameters
 if len(sys.argv) !=6:
-	print "usage:  %s api_key bed_list school_list sqfts type_list" % sys.argv[0]
+	print "usage: %s api_key bed_list school_list sqfts type_list" % sys.argv[0]
 	sys.exit(1)
-
-#params (input separate by comma if multiple data involves)
 api_key = sys.argv[1]
 bed_list = sys.argv[2].split(',')
 school_list= sys.argv[3].split(',')
@@ -18,12 +17,13 @@ sqfts = sys.argv[4].split(',')
 type_list =  sys.argv[5].split(',')
 
 flag = 0
-
 base = 'http://streeteasy.com/nyc/api/sales/data?criteria='
 key_and_format = '&key=%s&format=json'% api_key
-
-with open('mycsvfile2.csv', 'a') as f: 
-    for schooly in school_list: #go through defined schools
+ 
+for schooly in school_list: #go through defined schools
+    school = 'school:%s' % schooly
+    filename = '%s_school.csv' % (schooly)
+    with open(filename, 'a') as f: 
         school = 'school:%s' % schooly	
         for housing in type_list: #go through defined housing 
 	    housing1 = 'housing1:%s' % housing
@@ -44,4 +44,4 @@ with open('mycsvfile2.csv', 'a') as f:
                         w.writeheader() 
                         flag += 1
                     w.writerow(dict2)
-                    f.flush()   
+                    f.flush()# see line by line in a file     
