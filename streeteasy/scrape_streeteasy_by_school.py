@@ -8,12 +8,12 @@ from random import randrange
 import os
 
 if __name__=='__main__':
-    if len(sys.argv) < 3:
-        sys.stderr.write('usage: %s <borough> <username>' % sys.argv[0])
+    if len(sys.argv) < 4:
+        sys.stderr.write('usage: %s <borough> <status> <username>' % sys.argv[0])
         sys.exit(1)
 
     # parse args
-    borough, user = sys.argv[1], sys.argv[2]
+    borough, status, user = sys.argv[1], sys.argv[2], sys.argv[3]
     passwd = getpass('password: ')
 
     # set up browser
@@ -39,7 +39,7 @@ if __name__=='__main__':
         dbn, school = line.rstrip().split(',')
 
         try:
-            url = 'http://streeteasy.com/nyc/process/sales/xls/area:1|school:%s' % school
+            url = 'http://streeteasy.com/nyc/process/sales/xls/school:%s|status:%s' % (school, status)
             fname = '%s/%s.csv' % (borough, school)
             print fname
             f = br.retrieve(url, fname)
