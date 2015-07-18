@@ -46,4 +46,4 @@ if __name__=='__main__':
         except:
             sys.stderr.write('error retrieving %s' % url)
 
-        sleep(randrange(30))
+        sleep(randrange(60))
