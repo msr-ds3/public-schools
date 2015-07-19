@@ -15,7 +15,7 @@ elementary_schools <- schooldirectory %>%
   separate(DBN, c("borough_num","sep_chr","ps_num"), c(2,3), remove=F) %>%
   mutate(borough_num=as.numeric(borough_num),
          ps_num=as.numeric(ps_num),
-         streeteasy_id=sprintf("ps%d-%s", ps_num, tolower(City)))
+         streeteasy_id=sprintf("ps%d-%s", ps_num, tolower(gsub(' ', '', City))))
 
 # write the DBN and streeteasy id for each borough to a different file
 for (city in unique(elementary_schools$City)) {
