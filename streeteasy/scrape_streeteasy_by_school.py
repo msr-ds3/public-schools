@@ -40,7 +40,7 @@ if __name__=='__main__':
 
         try:
             url = 'http://streeteasy.com/nyc/process/sales/xls/school:%s|status:%s' % (school, status)
-            fname = '%s/%s.tsv' % (borough, school)
+            fname = '%s/%s_%s.tsv' % (borough, school, status)
             print fname
             f = br.retrieve(url, fname)
         except:
