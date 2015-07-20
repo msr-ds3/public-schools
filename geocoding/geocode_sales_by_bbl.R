@@ -5,7 +5,7 @@
 #
 # requires app_id and app_key
 #
-
+library(plyr)
 library(dplyr)
 library(httr)
 
@@ -38,8 +38,19 @@ for (i in 1:num_bbls) {
 
   if ((i-1) %% 1e3 == 0) {
     print(sprintf("saving %d of %d requests", i, num_bbls))
-    save(results, file='geocoded_bbls.RData')
+    save(results, bbls, file='geocoded_bbls.RData')
   }
 
   Sys.sleep(0.5)
 }
+
+# extract results, accounting for missing entries
+parsed_results <- ldply(results, function(result) {
+  tryCatch({
+    data.frame(results[[i]][c("bblBoroughCodeIn","bblTaxBlockIn","bblTaxLotIn","latitudeInternalLabel","longitudeInternalLabel")])
+  }, error=function(cond) {
+  })
+})
+
+# write results to tsv
+write.table(parsed_results, file="bbls_with_geo.tsv", sep="\t", row.names=F, quote=F)
