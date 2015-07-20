@@ -4,6 +4,7 @@ import json
 import os
 import glob
 import sys
+from time import sleep
 
 # For each row in the TSV:
 	# Geocode address
@@ -64,3 +65,5 @@ for file in glob.glob(os.getcwd() + "/" + borough + "/" + "*_" + status +".tsv")
         		csvout.writerow(row[0:6] + [s, address[0], address[1]] + row[8:11] + [jsonData['latitude'], jsonData['longitude']] + row[12:])
         		jsonout.write(json.dumps(jsonData) + '\n')
 
+                        # respect the API
+                        sleep(0.5)
