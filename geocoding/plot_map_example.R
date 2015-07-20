@@ -13,12 +13,12 @@ school_zone_boundaries <- create_school_mapdata(filepath, shapefile)
 schools_df <- fortify(school_zone_boundaries)
 school_zone_boundaries@data$id = rownames(school_zone_boundaries@data)
 schools_df <- merge(schools_df, school_zone_boundaries)
-
+#sc<-merge(schools_df,schooldata)
 # Create base map for NYC
 nyc_map <- create_city_basemap("New York, NY", -74.00, 40.71)
 # Plot polygons for school zones over the base map
-nyc_school_map <- ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, group=group, fill=BORO), 
-                                                size=.2,color='red', 
+nyc_school_map <- ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, group=group, fill=DBN), 
+                                                size=.2, 
                                                 data=schools_df, alpha=.5) 
 # Show map!
 nyc_school_map
