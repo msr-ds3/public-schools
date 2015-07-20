@@ -29,19 +29,19 @@ allschools <- merge(x = schoolratings, y = schooldirectory, by = "DBN", all.x = 
 bronx <- read.csv("schools/elementary_schools_bronx.csv", header = TRUE)
 bronx <- merge(x = bronx, y = allschools, by = "DBN", all.x = FALSE)
 
-brooklyn <- read.csv("schools/elementary_schools_brooklyn.csv", header = TRUE)
+brooklyn <- read.csv("schools/elementary_k8_schools_brooklyn.csv", header = TRUE)
 brooklyn <- merge(x = brooklyn, y = allschools, by = "DBN", all.x = FALSE)
 
-manhattan <- read.csv("schools/elementary_schools_manhattan.csv", header = TRUE)
+manhattan <- read.csv("schools/elementary_k8_schools_manhattan.csv", header = TRUE)
 manhattan <- merge(x = manhattan, y = allschools, by = "DBN", all.x = FALSE)
 
-newyork <- read.csv("schools/elementary_schools_newyork.csv", header = TRUE)
+newyork <- read.csv("schools/elementary_k8_schools_newyork.csv", header = TRUE)
 newyork <- merge(x = newyork, y = allschools, by = "DBN", all.x = FALSE)
 
-queens <- read.csv("schools/elementary_schools_queens.csv", header = TRUE)
+queens <- read.csv("schools/elementary_k8_schools_queens.csv", header = TRUE)
 queens <- merge(x = queens, y = allschools, by = "DBN", all.x = FALSE)
 
-statenisland <- read.csv("schools/elementary_schools_statenisland.csv", header = TRUE)
+statenisland <- read.csv("schools/elementary_k8_schools_statenisland.csv", header = TRUE)
 statenisland <- merge(x = statenisland, y = allschools, by = "DBN", all.x = FALSE)
 
 ####Binding all boroughs

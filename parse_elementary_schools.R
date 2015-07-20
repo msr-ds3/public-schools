@@ -11,7 +11,7 @@ colnames(schooldirectory)[1] <- "DBN"
 # create streeteasy identifier for each elementary school
 # given by ps<school_num>-<borough>
 elementary_schools <- schooldirectory %>%
-  filter(Location.Category.Description == "Elementary") %>%
+  filter(Location.Category.Description == "Elementary" | Location.Category.Description == "K-8" ) %>%
   separate(DBN, c("borough_num","sep_chr","ps_num"), c(2,3), remove=F) %>%
   mutate(borough_num=as.numeric(borough_num),
          ps_num=as.numeric(ps_num),
@@ -22,5 +22,5 @@ for (city in unique(elementary_schools$City)) {
   df <- elementary_schools %>%
     filter(City == city) %>%
     select(DBN, streeteasy_id)
-  write.csv(df, sprintf('schools/elementary_schools_%s.csv', tolower(gsub(' ', '', city))), row.names=F, quote=F) 
+  write.csv(df, sprintf('schools/elementary_k8_schools_%s.csv', tolower(gsub(' ', '', city))), row.names=F, quote=F) 
 }
