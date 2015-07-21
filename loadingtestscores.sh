@@ -19,4 +19,4 @@ wget http://schools.nyc.gov/NR/rdonlyres/320B6BB2-63D2-4E08-9246-385E1BBB4990/0/
 
 mv SchoolELAResults20132014.xlsx englishscores.xlsx
 
-mv SchoolMathResults20132014.xlsx mathscores.xls
+mv SchoolMathResults20132014.xlsx mathscores.xlsx

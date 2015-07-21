@@ -25,20 +25,24 @@ elementary_ps <- inner_join(schools_df, boundariesandschools)
 
 # Create base map for NYC
 nyc_map <- create_city_basemap("New York, NY", -74.00, 40.71)
+
 # Plot polygons for school zones over the base map
-nyc_school_map <- ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, group=group, fill= `Environment Rating`), 
+environmentmap <- ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, group=group, fill= `Environment Rating`), 
                                                 size=.2, color="black", 
-                                                data=elementary_ps, alpha=.5)
+                                                data=elementary_ps, alpha=.8)
+
+environmentmap = environmentmap + scale_fill_brewer(palette = "RdBu")
 
 # Show map!
-nyc_school_map = nyc_school_map + scale_fill_brewer(palette = "GnBu")
+environmentmap
 
-nyc_school_map
+###########################
 #Plot for Achievement rating
-nyc_school_map1 <- ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, group=group, fill= `Achievement Rating`), 
+achievementmap <- ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, group=group, fill= `Achievement Rating`), 
                                                 size=.2, color="black", 
-                                                data=elementary_ps, alpha=.5)
-# Show map!
-nyc_school_map1 = nyc_school_map1 + scale_fill_brewer(palette = "GnBu")
+                                                data=elementary_ps, alpha=.8)
 
-nyc_school_map1 
+achievementmap = achievementmap + scale_fill_brewer(palette = "RdBu")
+
+# Show map!
+achievementmap 
