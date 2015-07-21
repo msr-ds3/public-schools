@@ -9,7 +9,7 @@ import os
 
 if __name__=='__main__':
     if len(sys.argv) < 4:
-        sys.stderr.write('usage: %s <borough> <status> <username>' % sys.argv[0])
+        sys.stderr.write('usage: %s <borough> <status> <username>\n' % sys.argv[0])
         sys.exit(1)
 
     # parse args
@@ -38,12 +38,15 @@ if __name__=='__main__':
 
         dbn, school = line.rstrip().split(',')
 
-        try:
-            url = 'http://streeteasy.com/nyc/process/sales/xls/school:%s|status:%s' % (school, status)
-            fname = '%s/%s_%s.tsv' % (borough, school, status)
-            print fname
-            f = br.retrieve(url, fname)
-        except:
-            sys.stderr.write('error retrieving %s' % url)
+        fname = '%s/%s_%s.tsv' % (borough, school, status)
 
-        sleep(randrange(60))
+        if not os.path.exists(fname):
+            print fname
+
+            try:
+                url = 'http://streeteasy.com/nyc/process/sales/xls/school:%s|status:%s' % (school, status)
+                f = br.retrieve(url, fname)
+            except:
+                sys.stderr.write('error retrieving %s' % url)
+
+            sleep(randrange(60))
