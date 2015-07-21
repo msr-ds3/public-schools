@@ -62,5 +62,26 @@ schooldata <- schooldata %>%
 #Removing charter schools that are unzoned
 schooldata<-schooldata[!(schooldata$District==84),]
 
+#Add demographics excel
+demographics <- read_excel("schools/demographics.xlsx", col_names = TRUE, sheet = 4)
+
+#Filter out to the most recent data
+demographics <- demographics %>%  filter(Year == "2014-15")
+
+#Keep only relevant columns
+demographics <- demographics %>%
+  select(DBN, `Total Enrollment`, `% Asian`, `% Black`, `% Hispanic`, `% White`,
+         `% English Language Learners`, `% Poverty`)
+
+#Merge to school data
+schooldata <- merge(x = schooldata, y = demographics, by = "DBN", all.x = FALSE)
+
+#Remove intermediate data frames
+
+rm(df, demographics)
+
 # save everything
 save(schooldata, file="schools.RData")
+
+
+
