@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from nyc_geoclient import Geoclient
 import csv
 import json
@@ -36,12 +37,15 @@ for file in glob.glob(os.getcwd() + "/" + borough + "/" + "*_" + status +".tsv")
 	dirname, filename = os.path.split(file)
 	s, ext = os.path.splitext(filename)
 	s = s.split('_')[0]
-	
+
+        jsonout = open(path2, 'a')
+        csvout = open(path, 'a')
+        
 	# Open the file and the two files that will store the JSON and the original TSV + school info
-	with open(file,'r') as tsvin, open (path2, 'a') as jsonout, open (path, 'a') as csvout:
+	with open(file,'r') as tsvin:
     		tsvin = csv.reader(tsvin, delimiter='\t')
     		csvout = csv.writer(csvout, delimiter = ',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-    		
+
     		# For every row in the TSV
     		for row in tsvin:
     			# Get only a few rows
@@ -62,8 +66,19 @@ for file in glob.glob(os.getcwd() + "/" + borough + "/" + "*_" + status +".tsv")
         		
         		# Write to the TSV storing file the original data, only with address column replaced with separated address,
         		# plus the longitude, latitude
-        		csvout.writerow(row[0:6] + [s, address[0], address[1]] + row[8:11] + [jsonData['latitude'], jsonData['longitude']] + row[12:])
-        		jsonout.write(json.dumps(jsonData) + '\n')
+                        try:
+                                lat = jsonData['latitude']
+                                lon = jsonData['longitude']
+                        except:
+                                lat, lon = '', ''
+                                print "error in %s on line %d" % (file, count)
+                                print row
+                                print jsonData
+
+                        csvout.writerow(row[0:6] + [s, address[0], address[1]] + row[8:11] + [lat, lon] + row[12:])
+                        jsonout.write(json.dumps(jsonData) + '\n')
 
                         # respect the API
                         sleep(0.5)
+
+        jsonout.close()
