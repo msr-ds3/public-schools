@@ -22,7 +22,7 @@ colnames(schooldirectory)[1] <- "DBN"
 #Merge left
 schooldata <- merge(x = schooltarget, y = schooldirectory, by = "DBN", all.x = TRUE)
 
-schooldata<-filter(schooldata, `School Type` == 'Elementary'|`School Type` == 'K-8')
+schooldata <- filter(schooldata, `School Type` == 'Elementary'|`School Type` == 'K-8')
 
 env_levels <- c("Not Meeting Target","Approaching Target","Meeting Target","Exceeding Target")
 
@@ -35,3 +35,12 @@ schooldata <- schooldata %>%
 schooldata <- schooldata %>%
   mutate("Achievement Rating"=ifelse(`Achievement Rating` == "N/A", NA, `Achievement Rating`),
          "Achievement Rating"=factor(`Achievement Rating`, env_levels))
+
+#Remove unnecessary intermediate data frames
+rm(schooldirectory, schooltarget)
+
+#Keeping columns that we will  be using for the directory
+schooldata <- schooldata %.% select(DBN, `School Name`, Primary.Address, City, Zip, District, `Achievement Rating`, `Environment Rating`)
+
+#Removing charter schools that are unzoned
+schooldata<-schooldata[!(schooldata$District==84),]
