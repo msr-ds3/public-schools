@@ -60,7 +60,9 @@ for file in glob.glob(os.getcwd() + "/" + borough + "/" + "*_" + status +".tsv")
     			# Get the address row and split the number from the street for API purposes
         		address = row[7]
         		address = address.split(' ', 1)
-        		
+        		if len(address) == 1:
+                                address = ['', address[0]]
+
         		# Call the API and store in jsonData
         		jsonData = g.address(address[0], address[1], row[5])
         		
@@ -77,6 +79,9 @@ for file in glob.glob(os.getcwd() + "/" + borough + "/" + "*_" + status +".tsv")
 
                         csvout.writerow(row[0:6] + [s, address[0], address[1]] + row[8:11] + [lat, lon] + row[12:])
                         jsonout.write(json.dumps(jsonData) + '\n')
+
+                        if count % 100 == 0:
+                                print "%d addresses complete" % count
 
                         # respect the API
                         sleep(0.5)
