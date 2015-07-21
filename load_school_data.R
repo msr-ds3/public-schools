@@ -2,6 +2,7 @@
 library(readxl)
 library(ggplot2)
 library(dplyr)
+library(tidyr)
 #################
 
 #################################################################################
@@ -19,10 +20,25 @@ schooltarget <- read_excel("schools/schoolratings.xlsx", col_names = TRUE, skip 
 #Renaming column to have same name
 colnames(schooldirectory)[1] <- "DBN"
 
+# create streeteasy identifier for each elementary school
+# given by ps<school_num>-<borough>
+schooldirectory <- schooldirectory %>%
+  filter(Location.Category.Description == "Elementary" | Location.Category.Description == "K-8" ) %>%
+  separate(DBN, c("borough_num","sep_chr","ps_num"), c(2,3), remove=F) %>%
+  mutate(borough_num=as.numeric(borough_num),
+         ps_num=as.numeric(ps_num),
+         streeteasy_id=sprintf("ps%d-%s", ps_num, tolower(gsub(' ', '', City))))
+
+# write the DBN and streeteasy id for each borough to a different file
+for (city in unique(schooldirectory$City)) {
+  df <- schooldirectory %>%
+    filter(City == city) %>%
+    select(DBN, streeteasy_id)
+  write.csv(df, sprintf('schools/elementary_schools_%s.csv', tolower(gsub(' ', '', city))), row.names=F, quote=F) 
+}
+
 #Merge left
 schooldata <- merge(x = schooltarget, y = schooldirectory, by = "DBN", all.x = TRUE)
-
-schooldata <- filter(schooldata, `School Type` == 'Elementary'|`School Type` == 'K-8')
 
 env_levels <- c("Not Meeting Target","Approaching Target","Meeting Target","Exceeding Target")
 
@@ -40,7 +56,11 @@ schooldata <- schooldata %>%
 rm(schooldirectory, schooltarget)
 
 #Keeping columns that we will  be using for the directory
-schooldata <- schooldata %.% select(DBN, `School Name`, Primary.Address, City, Zip, District, `Achievement Rating`, `Environment Rating`)
+schooldata <- schooldata %>%
+  select(DBN, streeteasy_id, `School Name`, Primary.Address, City, Zip, District, `Achievement Rating`, `Environment Rating`)
 
 #Removing charter schools that are unzoned
 schooldata<-schooldata[!(schooldata$District==84),]
+
+# save everything
+save(schooldata, file="schools.RData")
