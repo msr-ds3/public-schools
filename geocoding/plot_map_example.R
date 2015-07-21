@@ -34,3 +34,11 @@ nyc_school_map <- ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, group=group, 
 nyc_school_map = nyc_school_map + scale_fill_brewer(palette = "GnBu")
 
 nyc_school_map
+#Plot for Achievement rating
+nyc_school_map1 <- ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, group=group, fill= `Achievement Rating`), 
+                                                size=.2, color="black", 
+                                                data=elementary_ps, alpha=.5)
+# Show map!
+nyc_school_map1 = nyc_school_map1 + scale_fill_brewer(palette = "GnBu")
+
+nyc_school_map1 
