@@ -1,6 +1,5 @@
 library(dplyr)
 library(tidyr)
-library(readxl)
 
 # read list of schools
 schooldirectory <- read.csv("schools/schooldirectory.csv", header = TRUE)
@@ -22,5 +21,5 @@ for (city in unique(elementary_schools$City)) {
   df <- elementary_schools %>%
     filter(City == city) %>%
     select(DBN, streeteasy_id)
-  write.csv(df, sprintf('schools/elementary_k8_schools_%s.csv', tolower(gsub(' ', '', city))), row.names=F, quote=F) 
+  write.csv(df, sprintf('schools/elementary_schools_%s.csv', tolower(gsub(' ', '', city))), row.names=F, quote=F) 
 }
