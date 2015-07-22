@@ -108,3 +108,6 @@ schooldata <- merge(schooldata, math, by = "DBN")
 schooldata <-merge(schooldata, english, by = "DBN")
 
 rm(english, math)
+
+colnames(schooldata)[16] <- "Mean Scale Score Math"
+colnames(schooldata)[17] <- "Mean Scale Score English"
