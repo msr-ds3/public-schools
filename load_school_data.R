@@ -1,8 +1,13 @@
 #Load libraries needed
+require(RODBC)
+library(RColorBrewer)
 library(readxl)
 library(ggplot2)
 library(dplyr)
 library(tidyr)
+library(devtools)
+#install_github("easyGgplot2", "kassambara")
+library(easyGgplot2)
 #################
 
 #################################################################################
@@ -86,15 +91,21 @@ rm(demographics, city, df)
 # save everything
 save(schooldata, file="schools.RData")
 
+#**************************Plotting maps with Google maps*************************************************************
+source("find_school_district_by_address.R")
 
+#read english and math data
+schooltarget_english <- read_excel("../schools/englishscores.xlsx", col_names = TRUE, sheet = 2, skip = 6)
+schooltarget_math <- read_excel("../schools/mathscores.xlsx", col_names = TRUE, sheet = 2, skip = 6)
 
+#filepath to zone distribution 2013-2014
+filepath <- "2013_2014_School_Zones_8May2013"
+shapefile <- "ES_Zones_2013-2014"
 
+# Get school boundaries from NYC opendata shapefiles
+school_zone_boundaries <- create_school_mapdata(filepath, shapefile)
 
-
-
-
-
-
+# Change to a data.frame for easy plotting
 schools_df <- fortify(school_zone_boundaries)
 school_zone_boundaries@data$id = rownames(school_zone_boundaries@data)
 boundariesandschools <- merge(school_zone_boundaries@data, schooldata, by = "DBN", all.y=TRUE)
@@ -137,45 +148,6 @@ nyc_school_map_hispanic <- ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, grou
 #display math test distribution map
 nyc_school_map_hispanic
 
+#plot asian,black,hispanic and white maps in one page
+ggplot2.multiplot(nyc_school_map_asian, nyc_school_map_black, nyc_school_map_white, nyc_school_map_hispanic, cols=2)
 
-multiplot(nyc_school_map_asian, nyc_school_map_black, nyc_school_map_white, nyc_school_map_hispanic, cols=2)
-
-
-
-
-
-multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
-  library(grid)
-  
-  # Make a list from the ... arguments and plotlist
-  plots <- c(list(...), plotlist)
-  
-  numPlots = length(plots)
-  
-  # If layout is NULL, then use 'cols' to determine layout
-  if (is.null(layout)) {
-    # Make the panel
-    # ncol: Number of columns of plots
-    # nrow: Number of rows needed, calculated from # of cols
-    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
-                     ncol = cols, nrow = ceiling(numPlots/cols))
-  }
-  
-  if (numPlots==1) {
-    print(plots[[1]])
-    
-  } else {
-    # Set up the page
-    grid.newpage()
-    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
-    
-    # Make each plot, in the correct location
-    for (i in 1:numPlots) {
-      # Get the i,j matrix positions of the regions that contain this subplot
-      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
-      
-      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
-                                      layout.pos.col = matchidx$col))
-    }
-  }
-}
