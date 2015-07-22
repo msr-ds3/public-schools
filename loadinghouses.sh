@@ -2,11 +2,6 @@
 #
 # description:
 #   fetches house files from the NYC Department of Finance
-#
-# usage: ./download_housing_sales.sh
-#
-# 
-# author: Thomas Patino supervised by jake hofman
 
 #Create directory
 mkdir housing
