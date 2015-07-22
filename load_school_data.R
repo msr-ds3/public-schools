@@ -6,7 +6,6 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(devtools)
-#install_github("easyGgplot2", "kassambara")
 library(easyGgplot2)
 #################
 
@@ -75,8 +74,7 @@ demographics <- demographics %>%  filter(Year == "2014-15")
 
 #Keep only relevant columns
 demographics <- demographics %>%
-  select(DBN, `% Asian`, `% Black`, `% Hispanic`, `% White`,
-         `% English Language Learners`, `% Poverty`)
+  select(DBN, `% Asian`, `% Black`, `% Hispanic`, `% White`, `% Poverty`)
 
 #Merge to school data
 schooldata <- merge(x = schooldata, y = demographics, by = "DBN", all.x = FALSE)
@@ -94,8 +92,19 @@ save(schooldata, file="schools.RData")
 
 #read english and math data
 english <- read_excel("schools/englishscores.xlsx", col_names = TRUE, sheet = 2, skip = 6)
-english <- english[ , !duplicated(colnames(english))]
-english <- english %>% filter(`Year` == "2014" | `Grade` == "All Grades")
+english <- subset(english, select = c(DBN, Grade, `Mean Scale Score`, Year))
+english <- english[english$Grade == "All Grades", ]
+english <- english[english$Year == 2014, ]
+english <- subset(english, select = c(DBN, `Mean Scale Score`))
+
 
 math <- read_excel("schools/mathscores.xlsx", col_names = TRUE, sheet = 2, skip = 6)
+math <- subset(math, select = c(DBN, Grade, `Mean Scale Score`, Year))
+math <- math[math$Grade == "All Grades", ]
+math <- math[math$Year == 2014, ]
+math <- subset(math, select = c(DBN, `Mean Scale Score`))
 
+schooldata <- merge(schooldata, math, by = "DBN")
+schooldata <-merge(schooldata, english, by = "DBN")
+
+rm(english, math)
