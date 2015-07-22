@@ -86,28 +86,44 @@ schooldata <- schooldata %>%
 #Remove intermediate data frames
 rm(demographics, city, df)
 
-# save everything
-save(schooldata, file="schools.RData")
 
+#Delete all the NAs from the race percentages
+schooldata <- schooldata[!is.na(schooldata$`% Asian`) &
+                           !is.na(schooldata$`% Black`) & !is.na(schooldata$`% White`) &
+                           !is.na(schooldata$`% Hispanic`),]
 
-#read english and math data
+#Loading English data
 english <- read_excel("schools/englishscores.xlsx", col_names = TRUE, sheet = 2, skip = 6)
+#Keep only the columbs with the grade, year, and score
 english <- subset(english, select = c(DBN, Grade, `Mean Scale Score`, Year))
+#Subset by all grades
 english <- english[english$Grade == "All Grades", ]
+#Keep only the 2014 data
 english <- english[english$Year == 2014, ]
+#Drop all columns we don't need
 english <- subset(english, select = c(DBN, `Mean Scale Score`))
 
-
+#Loading Math data
 math <- read_excel("schools/mathscores.xlsx", col_names = TRUE, sheet = 2, skip = 6)
+#Keep only the columbs with the grade, year, and score
 math <- subset(math, select = c(DBN, Grade, `Mean Scale Score`, Year))
+#Subset by all grades
 math <- math[math$Grade == "All Grades", ]
+#Keep only the 2014 data
 math <- math[math$Year == 2014, ]
+#Drop all columns we don't need
 math <- subset(math, select = c(DBN, `Mean Scale Score`))
 
+#Add data to main schooldata
 schooldata <- merge(schooldata, math, by = "DBN")
 schooldata <-merge(schooldata, english, by = "DBN")
 
+#Remove intermediate data frams
 rm(english, math)
 
+#Rename the columns for easier understanding
 colnames(schooldata)[16] <- "Mean Scale Score Math"
 colnames(schooldata)[17] <- "Mean Scale Score English"
+
+# save everything
+save(schooldata, file="schools.RData")
