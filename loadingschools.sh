@@ -2,10 +2,6 @@
 #
 # description:
 #   fetches schools files from the NYC Department of Education
-#
-# requirements: curl or wget
-#
-# author: Thomas Patino supervised by jake hofman
 
 #Create directory
 mkdir schools
