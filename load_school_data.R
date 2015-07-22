@@ -85,3 +85,97 @@ rm(demographics, city, df)
 
 # save everything
 save(schooldata, file="schools.RData")
+
+
+
+
+
+
+
+
+
+
+schools_df <- fortify(school_zone_boundaries)
+school_zone_boundaries@data$id = rownames(school_zone_boundaries@data)
+boundariesandschools <- merge(school_zone_boundaries@data, schooldata, by = "DBN", all.y=TRUE)
+boundariesandschools <- boundariesandschools[!is.na(boundariesandschools$`% Asian`) &
+                                               !is.na(boundariesandschools$`% Black`) & !is.na(boundariesandschools$`% White`) &
+                                               !is.na(boundariesandschools$`% Hispanic`),]
+
+#join school_zone_boundaries with English test
+elementary_ps <- inner_join(schools_df, boundariesandschools)
+nyc_map <- create_city_basemap("New York, NY", -74.00, 40.71)
+# Plot by Asian distribution in school districts
+nyc_school_map_asian <- ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, group=group, fill= `% Asian`), 
+                                                    size=.2, color="black", 
+                                                    data=elementary_ps, alpha=.8) + ggtitle("Asian") +
+  scale_fill_continuous(low="red", high="blue", guide = guide_legend(title = "Percentile"))
+#display math test distribution map
+nyc_school_map_asian
+
+# Plot by Black distribution in school districts
+nyc_school_map_black <- ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, group=group, fill= `% Black`), 
+                                                    size=.2, color="black", 
+                                                    data=elementary_ps, alpha=.8) + ggtitle("Black") +
+  scale_fill_continuous(low="red", high="blue", guide = guide_legend(title = "Percentile"))
+#display math test distribution map
+nyc_school_map_black
+
+# Plot by White distribution in school districts
+nyc_school_map_white <- ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, group=group, fill= `% White`), 
+                                                     size=.2, color="black", 
+                                                     data=elementary_ps, alpha=.8) + ggtitle("White") +
+  scale_fill_continuous(low="red", high="blue", guide = guide_legend(title = "Percentile"))
+#display math test distribution map
+nyc_school_map_white
+
+# Plot by Black distribution in school districts
+nyc_school_map_hispanic <- ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, group=group, fill= `% Hispanic`), 
+                                                     size=.2, color="black", 
+                                                     data=elementary_ps, alpha=.8) + ggtitle("Hispanic") +
+  scale_fill_continuous(low="red", high="blue", guide = guide_legend(title = "Percentile"))
+#display math test distribution map
+nyc_school_map_hispanic
+
+
+multiplot(nyc_school_map_asian, nyc_school_map_black, nyc_school_map_white, nyc_school_map_hispanic, cols=2)
+
+
+
+
+
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
