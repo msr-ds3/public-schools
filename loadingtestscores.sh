@@ -2,10 +2,7 @@
 #
 # description:
 #   fetches schools exam math and english scores files from the NYC Department of Education
-#
-# requirements: curl or wget
-#
-# author: Thomas Patino supervised by jake hofman
+
 
 #Save files to schools
 cd schools
