@@ -2,8 +2,6 @@
 #
 # description:
 # fetches school files from the NYC Department of Finance
-# 
-# author: Thomas Patino supervised by jake Hofman
 
 #Save files to housing
 cd schools
