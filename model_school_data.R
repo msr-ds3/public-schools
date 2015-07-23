@@ -11,6 +11,8 @@ train <- schooldata[ndx, ]
 test <- schooldata[-ndx, ]
 
 
+minority_group <-schooldata %>% group_by(`% Poverty`, `Total Enrollment`,`% Asian`, `% White`, `% Black`, `% Hispanic`) 
+
 lmmin.lm = lm(`Mean Scale Score Math` ~ `% Poverty` + `Environment Rating` + District, data=train)
 plot(train$`% Poverty`, train$`Mean Scale Score Math`, 
      main="Relationship between Math Test Score and Poverty",
