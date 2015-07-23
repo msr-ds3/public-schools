@@ -40,6 +40,9 @@ for (city in unique(schooldirectory$City)) {
   write.csv(df, sprintf('schools/elementary_schools_%s.csv', tolower(gsub(' ', '', city))), row.names=F, quote=F) 
 }
 
+#Delete repeating column
+schooldirectory$Location.Name <- NULL
+
 #Merge left
 schooldata <- merge(x = schooltarget, y = schooldirectory, by = "DBN", all.x = TRUE)
 
@@ -66,19 +69,17 @@ demographics <- read_excel("schools/demographics.xlsx", col_names = TRUE, sheet 
 #Filter out to the most recent data
 demographics <- demographics %>%  filter(Year == "2014-15")
 
+#Remove deleting column
+demographics$`School Name` <- NULL
+
+
 #Merge to school data
 schooldata <- merge(x = schooldata, y = demographics, by = "DBN", all.x = FALSE)
+
 
 #filter to elementary and k8 schools only
 schooldata <- schooldata %>%
   filter(`School Type` == "Elementary" | `School Type` == "K-8" )
-
-
-#Delete all the NAs from the race percentages
-schooldata <- schooldata[!is.na(schooldata$`% Asian`) &
-                           !is.na(schooldata$`% Black`) & !is.na(schooldata$`% White`) &
-                           !is.na(schooldata$`% Hispanic`) & !is.na(schooldata$`% Female`) &
-                           !is.na(schooldata$`% Male`),]
 
 #Loading English data
 english <- read_excel("schools/englishscores.xlsx", col_names = TRUE, sheet = 2, skip = 6)
@@ -88,6 +89,8 @@ english <- english[english$Grade == "All Grades", ]
 english <- english[english$Year == 2014, ]
 #Drop all columns we don't need
 english <- subset(english, select = c(DBN, `Mean Scale Score`))
+#Change name
+colnames(english)[2] <- "Mean Scale Score English"
 
 #Loading Math data
 math <- read_excel("schools/mathscores.xlsx", col_names = TRUE, sheet = 2, skip = 6)
@@ -97,6 +100,8 @@ math <- math[math$Grade == "All Grades", ]
 math <- math[math$Year == 2014, ]
 #Drop all columns we don't need
 math <- subset(math, select = c(DBN, `Mean Scale Score`))
+#Change name
+colnames(math)[2] <- "Mean Scale Score Math"
 
 #Add data to main schooldata
 schooldata <- merge(schooldata, math, by = "DBN")
@@ -105,13 +110,9 @@ schooldata <-merge(schooldata, english, by = "DBN")
 #Remove intermediate data frams
 rm(english, math)
 
-#Rename the columns for easier understanding
-colnames(schooldata)[16] <- "Mean Scale Score Math"
-colnames(schooldata)[17] <- "Mean Scale Score English"
-
 #Remove Columns
 schooldata <- schooldata %>% select(DBN, streeteasy_id, 
-          `School Name.y`,`School Type`, District , Primary.Address, City, Zip, 
+          `School Name`,`School Type`, District , Primary.Address, City, Zip, 
           `Achievement Rating`, `Environment Rating`, `Total Enrollment`, `% Female`, 
           `% Male`,  `% Asian`, `% Black`, `% Hispanic`, `% White`, `% Poverty`, `Mean Scale Score Math`, 
           `Mean Scale Score English`)
