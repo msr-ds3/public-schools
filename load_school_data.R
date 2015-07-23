@@ -55,12 +55,6 @@ schooldata <- schooldata %>%
   mutate("Achievement Rating"=ifelse(`Achievement Rating` == "N/A", NA, `Achievement Rating`),
          "Achievement Rating"=factor(`Achievement Rating`, env_levels))
 
-#Remove unnecessary intermediate data frames
-rm(schooldirectory, schooltarget)
-
-#Keeping columns that we will  be using for the directory
-schooldata <- schooldata %>%
-  select(DBN, streeteasy_id, `School Name`,`School Type`, District , Primary.Address, City, Zip, `Achievement Rating`, `Environment Rating`)
 
 #Removing charter schools that are unzoned
 schooldata<-schooldata[!(schooldata$District==84),]
@@ -72,10 +66,6 @@ demographics <- read_excel("schools/demographics.xlsx", col_names = TRUE, sheet 
 #Filter out to the most recent data
 demographics <- demographics %>%  filter(Year == "2014-15")
 
-#Keep only relevant columns
-demographics <- demographics %>%
-  select(DBN, `% Asian`, `% Black`, `% Hispanic`, `% White`, `% Poverty`)
-
 #Merge to school data
 schooldata <- merge(x = schooldata, y = demographics, by = "DBN", all.x = FALSE)
 
@@ -83,19 +73,15 @@ schooldata <- merge(x = schooldata, y = demographics, by = "DBN", all.x = FALSE)
 schooldata <- schooldata %>%
   filter(`School Type` == "Elementary" | `School Type` == "K-8" )
 
-#Remove intermediate data frames
-rm(demographics, city, df)
-
 
 #Delete all the NAs from the race percentages
 schooldata <- schooldata[!is.na(schooldata$`% Asian`) &
                            !is.na(schooldata$`% Black`) & !is.na(schooldata$`% White`) &
-                           !is.na(schooldata$`% Hispanic`),]
+                           !is.na(schooldata$`% Hispanic`) & !is.na(schooldata$`% Female`) &
+                           !is.na(schooldata$`% Male`),]
 
 #Loading English data
 english <- read_excel("schools/englishscores.xlsx", col_names = TRUE, sheet = 2, skip = 6)
-#Keep only the columbs with the grade, year, and score
-english <- subset(english, select = c(DBN, Grade, `Mean Scale Score`, Year))
 #Subset by all grades
 english <- english[english$Grade == "All Grades", ]
 #Keep only the 2014 data
@@ -105,8 +91,6 @@ english <- subset(english, select = c(DBN, `Mean Scale Score`))
 
 #Loading Math data
 math <- read_excel("schools/mathscores.xlsx", col_names = TRUE, sheet = 2, skip = 6)
-#Keep only the columbs with the grade, year, and score
-math <- subset(math, select = c(DBN, Grade, `Mean Scale Score`, Year))
 #Subset by all grades
 math <- math[math$Grade == "All Grades", ]
 #Keep only the 2014 data
@@ -124,6 +108,16 @@ rm(english, math)
 #Rename the columns for easier understanding
 colnames(schooldata)[16] <- "Mean Scale Score Math"
 colnames(schooldata)[17] <- "Mean Scale Score English"
+
+#Remove Columns
+schooldata <- schooldata %>% select(DBN, streeteasy_id, 
+          `School Name.y`,`School Type`, District , Primary.Address, City, Zip, 
+          `Achievement Rating`, `Environment Rating`, `Total Enrollment`, `% Female`, 
+          `% Male`,  `% Asian`, `% Black`, `% Hispanic`, `% White`, `% Poverty`, `Mean Scale Score Math`, 
+          `Mean Scale Score English`)
+
+#Remove other data frames
+rm(demographics, df, schooldirectory, schooltarget, city)
 
 # save everything
 save(schooldata, file="schools.RData")
