@@ -58,3 +58,9 @@ mv SchoolMathResults20132014.xlsx mathscores.xlsx
 wget http://schools.nyc.gov/NR/rdonlyres/77954FB0-FD24-476B-AB81-3E9BBE8655D9/183200/DemographicSnapshot201011to201415Public_FINAL.xlsx
 
 mv DemographicSnapshot201011to201415Public_FINAL.xlsx demographics.xlsx
+
+#Get files about about class sizes
+
+wget http://schools.nyc.gov/NR/rdonlyres/5EC03778-74AD-45FF-9951-44441AE570F2/0/SchoolLevelDetailSummary_Updated_2015.xlsx
+
+mv SchoolLevelDetailSummary_Updated_2015.xlsx classsizes.xlsx
