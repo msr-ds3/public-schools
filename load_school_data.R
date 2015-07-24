@@ -1,12 +1,7 @@
 #Load libraries needed
-require(RODBC)
-library(RColorBrewer)
 library(readxl)
-library(ggplot2)
 library(dplyr)
 library(tidyr)
-library(devtools)
-library(easyGgplot2)
 #################
 
 #################################################################################
@@ -45,18 +40,6 @@ schooldirectory$Location.Name <- NULL
 
 #Merge left
 schooldata <- merge(x = schooltarget, y = schooldirectory, by = "DBN", all.x = TRUE)
-
-env_levels <- c("Not Meeting Target","Approaching Target","Meeting Target","Exceeding Target")
-
-#Changing into numeric Environment Rating
-schooldata <- schooldata %>%
-  mutate("Environment Rating"=ifelse(`Environment Rating` == "N/A", NA, `Environment Rating`),
-         "Environment Rating"=factor(`Environment Rating`, env_levels))
-
-#Changing into numeric Achievement Rating
-schooldata <- schooldata %>%
-  mutate("Achievement Rating"=ifelse(`Achievement Rating` == "N/A", NA, `Achievement Rating`),
-         "Achievement Rating"=factor(`Achievement Rating`, env_levels))
 
 
 #Removing charter schools that are unzoned
@@ -108,17 +91,29 @@ schooldata <- merge(schooldata, math, by = "DBN")
 schooldata <-merge(schooldata, english, by = "DBN")
 
 #Remove intermediate data frams
-rm(english, math)
 
 #Remove Columns
 schooldata <- schooldata %>% select(DBN, streeteasy_id, 
-          `School Name`,`School Type`, District , Primary.Address, City, Zip, 
-          `Achievement Rating`, `Environment Rating`, `Total Enrollment`, `% Female`, 
-          `% Male`,  `% Asian`, `% Black`, `% Hispanic`, `% White`, `% Poverty`, `Mean Scale Score Math`, `% English Language Learners`, 
-          `Mean Scale Score English`)
+                                    `School Name`,`School Type`, District , Primary.Address, City, Zip, 
+                                    `Achievement Rating`, `Environment Rating`, `Total Enrollment`, `% Female`, 
+                                    `% Male`,  `% Asian`, `% Black`, `% Hispanic`, `% White`, `% Poverty`, `Mean Scale Score Math`, `% English Language Learners`, 
+                                    `Mean Scale Score English`)
+
+#Deleting all NAs 
+schooldata <- schooldata %>%
+  mutate("Environment Rating"=ifelse(`Environment Rating` == "N/A", NA, `Environment Rating`))
+schooldata <- schooldata %>%
+  mutate("Achievement Rating"=ifelse(`Achievement Rating` == "N/A", NA, `Achievement Rating`))
+
+#Creating a list with all the level
+env_levels <- c("Not Meeting Target","Approaching Target","Meeting Target","Exceeding Target")
+
+#Change from character to numeric
+schooldata$`Achievement Rating`=factor(schooldata$`Achievement Rating`, env_levels)
+schooldata$`Environment Rating`=factor(schooldata$`Environment Rating`, env_levels)
 
 #Remove other data frames
-rm(demographics, df, schooldirectory, schooltarget, city)
+rm(demographics, df, schooldirectory, schooltarget, city, english, math, env_levels)
 
 # save everything
 save(schooldata, file="schools.RData")
