@@ -90,14 +90,32 @@ colnames(math)[2] <- "Mean Scale Score Math"
 schooldata <- merge(schooldata, math, by = "DBN")
 schooldata <-merge(schooldata, english, by = "DBN")
 
-#Remove intermediate data frams
+
+#Load Class Number data
+classes <- read_excel("schools/classsizes.xlsx", skip = 8)
+
+#Create New Column with DBN number
+classes$DBN = paste(classes$CSD, classes$`SCHOOL CODE`, sep="")
+
+#Delele All rows with NAs in their student-teacher ratio
+classes <-classes[!(is.na(classes$`SCHOOLWIDE PUPIL-TEACHER RATIO`)),]
+
+#Keep Only DBN and ratio data
+classes <- classes %>% select(DBN,`SCHOOLWIDE PUPIL-TEACHER RATIO`)
+
+#Rename column 
+colnames(classes)[2] <- "Student Ratio"
+
+#Left Join
+schooldata <- merge(x = schooldata, y = classes, by = "DBN", all.x = FALSE)
+
 
 #Remove Columns
 schooldata <- schooldata %>% select(DBN, streeteasy_id, 
                                     `School Name`,`School Type`, District , Primary.Address, City, Zip, 
                                     `Achievement Rating`, `Environment Rating`, `Total Enrollment`, `% Female`, 
                                     `% Male`,  `% Asian`, `% Black`, `% Hispanic`, `% White`, `% Poverty`, `Mean Scale Score Math`, `% English Language Learners`, 
-                                    `Mean Scale Score English`)
+                                    `Mean Scale Score English`, `Student Ratio`)
 
 #Deleting all NAs 
 schooldata <- schooldata %>%
@@ -113,7 +131,7 @@ schooldata$`Achievement Rating`=factor(schooldata$`Achievement Rating`, env_leve
 schooldata$`Environment Rating`=factor(schooldata$`Environment Rating`, env_levels)
 
 #Remove other data frames
-rm(demographics, df, schooldirectory, schooltarget, city, english, math, env_levels)
+rm(demographics, df, schooldirectory, schooltarget, city, english, math, env_levels, classes)
 
 # save everything
 save(schooldata, file="schools.RData")
