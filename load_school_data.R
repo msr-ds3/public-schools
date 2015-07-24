@@ -114,7 +114,7 @@ rm(english, math)
 schooldata <- schooldata %>% select(DBN, streeteasy_id, 
           `School Name`,`School Type`, District , Primary.Address, City, Zip, 
           `Achievement Rating`, `Environment Rating`, `Total Enrollment`, `% Female`, 
-          `% Male`,  `% Asian`, `% Black`, `% Hispanic`, `% White`, `% Poverty`, `Mean Scale Score Math`, 
+          `% Male`,  `% Asian`, `% Black`, `% Hispanic`, `% White`, `% Poverty`, `Mean Scale Score Math`, `% English Language Learners`, 
           `Mean Scale Score English`)
 
 #Remove other data frames
