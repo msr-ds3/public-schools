@@ -64,3 +64,15 @@ mv DemographicSnapshot201011to201415Public_FINAL.xlsx demographics.xlsx
 wget http://schools.nyc.gov/NR/rdonlyres/5EC03778-74AD-45FF-9951-44441AE570F2/0/SchoolLevelDetailSummary_Updated_2015.xlsx
 
 mv SchoolLevelDetailSummary_Updated_2015.xlsx classsizes.xlsx
+
+cd ..
+
+### Shapefile data
+mkdir geocoding
+
+cd geocoding
+
+wget -O nyc_school_shapefiles_2014.zip https://data.cityofnewyork.us/api/geospatial/pp5b-95kq?method=export&format=Shapefile
+
+unzip nyc_school_shapefiles_2014.zip
+
