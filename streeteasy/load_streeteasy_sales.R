@@ -6,12 +6,9 @@
 
 ##loading libraries
 library(dplyr)
-library(ggplot2)
-require(RODBC)
-library(RColorBrewer)
 library(readxl)
 library(tidyr)
-library(devtools)
+
 
 #################################################################
 ## NOTE: This must be run from the streeteasy directory!!! ######
