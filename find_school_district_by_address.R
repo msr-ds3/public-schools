@@ -38,7 +38,7 @@ get_addresses <- function(filename){
 }
 
 Main <- function() {
-  filepath <- "2013_2014_School_Zones_8May2013"
+  filepath <- "geocoding/2013_2014_School_Zones_8May2013"
   shapefile <- "ES_Zones_2013-2014"
   input_addresses_file <- "street_addresses.csv"
 
