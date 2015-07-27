@@ -1,4 +1,4 @@
-#By: Glenda and Ryley :)                                                          July, 24, 2015              
+#By: Glenda and Ryley                                                              July, 24, 2015              
 
 ## Downloading the requered libraries
 library(ggplot2)
@@ -181,6 +181,12 @@ ggplot(data = filter(plot_data, (total_rooms == 1 | total_rooms == 2 | total_roo
         axis.text.x=element_text(angle=80, hjust=1),
         legend.background = element_rect(fill = "transparent"))
 
+####################
+##14) Looking for all the names for each neighborhood and thier total sum
+
+df3 <- complete_listings %>% group_by(neighborhood) %>% summarize(num = n())
+View(df3)
+
 ###############################################################################################
 ##                            Modeling The NYC Sold Listing Sales Data                      ##
 ###############################################################################################
@@ -195,20 +201,33 @@ df <- complete_listings[!is.na(complete_listings$bedrooms) &
                          # !is.na(complete_listings$maintenance_fee) 
                          complete_listings$bedrooms < 4, ]
 ## Filter the data-frame so we can obtain only the the Upper West Side and Park Slope neighborhoods
-df <- filter(df, price <= 2.5e6, neighborhood == "Upper West Side" | neighborhood == "Park Slope")
+df2 <- filter(df, price <= 2.5e6, neighborhood == "Upper West Side" | 
+                neighborhood == "Park Slope"| 
+                neighborhood == "Williamsburg" | 
+                neighborhood == "Upper East Side" | 
+                neighborhood == "Sunset Park"|
+                neighborhood == "Greenpoint" |
+                neighborhood == "East Williamsburg"|
+                neighborhood == "Bushwick"|
+                neighborhood == "Battery Park City"|
+                neighborhood == "Bay Ridge"|
+                neighborhood == "Bedford Park")
+
+df2 <- filter(df, price <= 2.5e6, neighborhood == "Upper West Side" | neighborhood == "Park Slope")
+##Experimenting to see what happen with outliers for each 
+# df2 <- filter(df, price <= 2.5e6, borough == "Manhattan")
+# df2 <- filter(df, price <= 2.5e6, borough == "Manhattan" & (DBN == "05M030" | DBN == "05M129" | DBN == "04M096" | DBN == "04M102"))
 
 ## We drop unused levels from a factor in a data frame 
-df <- mutate(df, DBN = droplevels(DBN))
-
+df2 <- mutate(df2, DBN = droplevels(DBN))
 ## We split the the dataframe f into a test and train data
-num_train <- round(nrow(df) * 0.75)
-ndx <- sample(nrow(df), num_train)
-train <- df[ndx, ]
-test <- df[-ndx, ]
+num_train <- round(nrow(df2) * 0.75)
+ndx <- sample(nrow(df2), num_train)
+train <- df2[ndx, ]
+test <- df2[-ndx, ]
 
-#########################      ########################      ###############      ###########
-#GLMNET()                                    
-#########################       ########################      ###############      ###########
+# ########################             # GLMNET() #             ######################### #
+
 ##  Prep the training data for input into glmnet
 x = model.matrix(I(price/sqft) ~ DBN + bedrooms + baths + 
                   borough, data = train)
@@ -227,6 +246,31 @@ cvfit = cv.glmnet (x, y)# Grab the coefficients of each variable in the equation
 coef(cvfit, s="lambda.min")
 
 ## Predict on the testing data with the lambda minimized
+cvpred <- predict(cvfit, newx = x, s = "lambda.min")
+
+## Change prediction to easy view
+cvpred <- data.frame(cvpred)
+
+# Set the predictions and true values next to each other for the training set
+pred <- cbind(cvpred, y)
+View(pred)
+
+## Get correlation between the predictions and the truth
+cor(cvpred, y)
+
+# Graph the true vals vs predictions for training set
+ggplot(data = filter(pred, y <= 5000), aes(x = X1, y = y, color= y)) + 
+  geom_point()+
+  geom_abline(data = pred,  stat = "abline", position = "identity", show_guide = FALSE)+
+  xlab('Predicted ppsqft') + 
+  ylab('True Ppsqft') +
+  ggtitle('True Ppsqft vs Predicted ppsqft For Training Data') +
+  theme(legend.title=element_blank(),
+        axis.text.x=element_text(angle=80, hjust=1),
+        legend.background = element_rect(fill = "transparent"))
+
+
+## Predict on the testing data with the lambda minimized
 cvpred <- predict(cvfit, newx = xT, s = "lambda.min")
 
 ## Change prediction to easy view
@@ -234,6 +278,21 @@ cvpred <- data.frame(cvpred)
 
 ## Get correlation between the predictions and the truth
 cor(cvpred, yT)
+
+# Set the predictions and true values next to each other for the test set
+pred2 <- cbind(cvpred, yT)
+View(pred2)
+
+# Plot the true Price Per psqft vs Predicted ppsqft For Test Data
+ggplot(data = filter(pred2, yT <= 5000), aes(x = X1, y = yT, color = yT)) + 
+  geom_point()+
+  geom_abline(data = pred,  stat = "abline", position = "identity", show_guide = FALSE)+
+  xlab('Predicted ppsqft') + 
+  ylab('True Ppsqft') +
+  ggtitle('True Price Price per sqft vs Predicted ppsqft For Test Data') +
+  theme(legend.title=element_blank(),
+        axis.text.x=element_text(angle=80, hjust=1),
+        legend.background = element_rect(fill = "transparent"))
 
 ## Plot the cvfit to see the the lambda  and mean square error
 plot(cvfit)
