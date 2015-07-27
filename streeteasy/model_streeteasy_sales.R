@@ -197,29 +197,32 @@ set.seed(808)
 df <- complete_listings[!is.na(complete_listings$bedrooms) & 
                           !is.na(complete_listings$baths) & 
                           !is.na(complete_listings$DBN) & 
-                          !is.na(complete_listings$borough) & 
-                         # !is.na(complete_listings$maintenance_fee) 
+                          !is.na(complete_listings$borough) &
+                        #!is.na(complete_listings$unit_type) &
+                         #!is.na(complete_listings$neighborhood) &
                          complete_listings$bedrooms < 4, ]
-## Filter the data-frame so we can obtain only the the Upper West Side and Park Slope neighborhoods
-df2 <- filter(df, price <= 2.5e6, neighborhood == "Upper West Side" | 
-                neighborhood == "Park Slope"| 
-                neighborhood == "Williamsburg" | 
-                neighborhood == "Upper East Side" | 
-                neighborhood == "Sunset Park"|
-                neighborhood == "Greenpoint" |
-                neighborhood == "East Williamsburg"|
-                neighborhood == "Bushwick"|
-                neighborhood == "Battery Park City"|
-                neighborhood == "Bay Ridge"|
-                neighborhood == "Bedford Park")
 
-df2 <- filter(df, price <= 2.5e6, neighborhood == "Upper West Side" | neighborhood == "Park Slope")
-##Experimenting to see what happen with outliers for each 
-# df2 <- filter(df, price <= 2.5e6, borough == "Manhattan")
-# df2 <- filter(df, price <= 2.5e6, borough == "Manhattan" & (DBN == "05M030" | DBN == "05M129" | DBN == "04M096" | DBN == "04M102"))
+# Filter the data frame to avoid bad data outliers in the sqft
+df2 <- filter(df, price <= 2.5e6, sqft > 100)
+
+
+#### Used to help find outliers in the data. Use above command unless needed. #####
+# ## Filter the data-frame so we can obtain only the the Upper West Side and Park Slope neighborhoods
+# df2 <- filter(df, price <= 2.5e6, neighborhood == "Upper West Side" | 
+#                 neighborhood == "Park Slope"| 
+#                 neighborhood == "Williamsburg" | 
+#                 neighborhood == "Upper East Side" | 
+#                 neighborhood == "Sunset Park"|
+#                 neighborhood == "Greenpoint" |
+#                 neighborhood == "East Williamsburg"|
+#                 neighborhood == "Bushwick"|
+#                 neighborhood == "Battery Park City"|
+#                 neighborhood == "Bay Ridge"|
+#                 neighborhood == "Bedford Park")
 
 ## We drop unused levels from a factor in a data frame 
 df2 <- mutate(df2, DBN = droplevels(DBN))
+
 ## We split the the dataframe f into a test and train data
 num_train <- round(nrow(df2) * 0.75)
 ndx <- sample(nrow(df2), num_train)
@@ -234,12 +237,8 @@ x = model.matrix(I(price/sqft) ~ DBN + bedrooms + baths +
 y = train$price/train$sqft
 
 ## Prep the testing data for input into glmnet
-xT = model.matrix(I(price/sqft) ~ DBN +bedrooms + baths + 
-                    borough, data = test)
+xT = model.matrix(I(price/sqft) ~ DBN + bedrooms + baths + borough, data = test)
 yT = test$price/test$sqft
-
-## Unique combinations
-#length(unique(train$DBN))
 
 ## Run the actual glmnet function to get a model
 cvfit = cv.glmnet (x, y)# Grab the coefficients of each variable in the equation
@@ -253,13 +252,12 @@ cvpred <- data.frame(cvpred)
 
 # Set the predictions and true values next to each other for the training set
 pred <- cbind(cvpred, y)
-View(pred)
 
 ## Get correlation between the predictions and the truth
 cor(cvpred, y)
 
 # Graph the true vals vs predictions for training set
-ggplot(data = filter(pred, y <= 5000), aes(x = X1, y = y, color= y)) + 
+ggplot(data = filter(pred, X1 <= 10000, y <= 5000), aes(x = X1, y = y)) + 
   geom_point()+
   geom_abline(data = pred,  stat = "abline", position = "identity", show_guide = FALSE)+
   xlab('Predicted ppsqft') + 
@@ -268,7 +266,6 @@ ggplot(data = filter(pred, y <= 5000), aes(x = X1, y = y, color= y)) +
   theme(legend.title=element_blank(),
         axis.text.x=element_text(angle=80, hjust=1),
         legend.background = element_rect(fill = "transparent"))
-
 
 ## Predict on the testing data with the lambda minimized
 cvpred <- predict(cvfit, newx = xT, s = "lambda.min")
@@ -284,7 +281,7 @@ pred2 <- cbind(cvpred, yT)
 View(pred2)
 
 # Plot the true Price Per psqft vs Predicted ppsqft For Test Data
-ggplot(data = filter(pred2, yT <= 5000), aes(x = X1, y = yT, color = yT)) + 
+ggplot(data = filter(pred2, yT <= 5000), aes(x = X1, y = yT)) + 
   geom_point()+
   geom_abline(data = pred,  stat = "abline", position = "identity", show_guide = FALSE)+
   xlab('Predicted ppsqft') + 
@@ -301,8 +298,11 @@ plot(cvfit)
 ## according to the distribution of values of a particular variable
 quantile(df$price, seq(0,1,by=0.01))
 
+## Get the avg mean squared error over all observations
+mean((cvpred - yT)^2)/nrow(test)
+
 ## Get the actual average mean squared error
-mean((cvpred - yT)^2) 
+mean((cvpred - yT)^2)
 
 
 ###############################################################################################
@@ -328,35 +328,3 @@ modelFrame <- data.frame(modelVal)
 summary(models.lm)$r.squared 
 summary(models.lm)
 View(modelFrame)
-
-###############################################################################################
-############################################ Also Ignore ######################################
-###############################################################################################
-
-k <- c(1:15)
-train_fit <- c(numeric(length=15))
-test_fit <- c(numeric(length=15))
-
-for (n in k) {
-  fit1<-lm(price ~ poly(bedrooms, n, raw=TRUE) + poly(baths, 2, raw=TRUE) + BORO + poly(as.numeric(DBN), 1, raw=TRUE), data = train)
-  
-  predictions_test<- predict(fit1, test)
-  predictions_test<- data.frame(predictions_test)
-  predictions_train <- predict(fit1,train)
-  predictions_train<- data.frame(predictions_train)
-  
-  train_fit[n] <- cor(train$price, predictions_train)
-  test_fit[n] <- cor(test$price,predictions_test)
-}
-
-df1<- data.frame(k,train_fit,train_or_test="train")
-df1<- rename(df1, fit= train_fit)
-df2<- data.frame(k,test_fit,train_or_test="test")
-df2<-rename(df2,fit =test_fit)
-
-df3<-rbind(df1,df2)
-View(df3)
-
-ggplot(data=df3, aes(x=k,y=fit,color=as.factor(train_or_test))) + geom_line()
-ggplot(data=df3, aes(x=k, y=fit,color=as.factor(train_or_test))) + geom_point()+ geom_smooth(method=locfit, formula=y ~ lp(x,nn=0.5, deg=2))
-
