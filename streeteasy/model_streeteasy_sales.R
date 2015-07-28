@@ -1,235 +1,36 @@
-#By: Glenda and Ryley                                                              July, 24, 2015              
+########################################################################################
+##                      Modeling The NYC Sold Listing Sales Data                      ##
+########################################################################################
+## By: Riley and Glenda                                                         
 
-## Downloading the requered libraries
+## Get the required libraries
 library(ggplot2)
 library(dplyr)
 library(locfit)
 library(glmnet)
 
 ## Load the data for modeling
-load("streeteasy_sales.RData")
+load('../compl_school.RData')
 
-################################################################################################
-##                           Plotting The NYC Sold Listing Data                              ##
-################################################################################################
+## Rename the original data for ease in modeling
+df <- schools_zone_sales
 
-##1) Use a temporary df to store only complete listings with a DBN
-df <- complete_listings[!is.na(complete_listings$DBN), ]
+## Declare DBNs as factors and drop any unused factors
+df$DBN <- as.factor(df$DBN)
+df <- mutate(df, DBN = droplevels(DBN))
 
-##2) Group by borough and DBN and get an average per square feet
-plot_data <- df %>%
-  group_by(DBN, borough) %>% 
-  summarize(avg_price = mean(price/sqft))
-
-##3) Plot the average price per school zone faceted
-ggplot(data = filter(plot_data, avg_price < 5000), aes(x = DBN, y = avg_price)) + 
-  geom_point()+
-  xlab('Schools') + 
-  ylab('Average Price') +
-  facet_wrap(~ borough, scale="free", ncol=1) +
-  ggtitle('Average Price Per School Zone') +
-  theme(legend.title=element_blank(),
-        axis.text.x=element_text(angle=80, hjust=1),
-        legend.background = element_rect(fill = "transparent"))
-
-##4) Plot the square feet average price per school zone, colored by each borough
-ggplot(data = filter(plot_data, avg_price < 5000), aes(x = DBN, y = avg_price, color = as.factor(borough))) + 
-  geom_point()+
-  xlab('Schools') + 
-  ylab('Average Price') +
-  ggtitle('Average Price Per School Zone') +
-  theme(legend.title=element_blank(),
-        axis.text.x=element_text(angle=80, hjust=1),
-        legend.background = element_rect(fill = "transparent"))
-
-##5) Find the average price per bedrooms, bathrooms, borough and school dristrict
-plot_data <- df %>%
-  group_by(DBN, bedrooms, baths, BORO_NUM, sqft) %>% summarize(avg_price = mean(price/sqft))
-
-  ## Order the data
-plot_data <- plot_data %>%
-  ungroup() %>%
-  mutate(DBN=reorder(DBN, avg_price))
-
-  ##plot the average price less than 5000, sqft less than 5000 for beds 0, 1, 2, and 3
-ggplot(data = filter(plot_data, avg_price < 5000, sqft < 5000, (bedrooms == 0 |bedrooms == 1 | bedrooms == 2 | bedrooms ==3)), 
-       aes(x = avg_price, y = sqft, color = as.factor(bedrooms))) + 
-  geom_point()+
-  xlab('Avg Price') + 
-  ylab('SQFT') +
-  ggtitle('Average Price Per Square Foot') +
-  theme(legend.title=element_blank(),
-        axis.text.x=element_text(angle=80, hjust=1),
-        legend.background = element_rect(fill = "transparent"))
-
-
-
-##6) By district, check the avg price per square foot by bedroom
-ggplot(data = filter(plot_data, avg_price < 5000, (bedrooms == 0 | bedrooms == 1 | bedrooms == 2 | bedrooms == 3)), aes(x = DBN, y = avg_price, color = as.factor(bedrooms))) + 
-  geom_point()+
-  xlab('Schools') + 
-  ylab('Average Price') +
-  ggtitle('Average Price Per School District By # of Bedrooms') +
-  facet_wrap( ~ BORO_NUM) +
-  theme(legend.title=element_blank(),
-        axis.text.x=element_text(angle=80, hjust=1),
-        legend.background = element_rect(fill = "transparent"))
-
-  ## Separate each borough into its own mapping for better looks
-ggplot(data = filter(plot_data, avg_price < 5000, BORO_NUM == 3, (bedrooms == 0 | bedrooms == 1 | bedrooms == 2 | bedrooms == 3)), aes(x = DBN, y = avg_price, color = as.factor(bedrooms))) + 
-  geom_point()+
-  xlab('Schools') + 
-  ylab('Average Price') +
-  ggtitle('Average Price Per School Zone By Bedroom Numbers') +
-  theme(legend.title=element_blank(),
-        axis.text.x=element_text(angle=80, hjust=1),
-        legend.background = element_rect(fill = "transparent"))
-
-
-##7) Make a new column "total rooms"
-plot_data$total_rooms = plot_data$bedrooms + plot_data$baths
-
-plot_data <- plot_data %>%
-  ungroup() %>%
-  mutate(DBN=reorder(DBN, avg_price))
-
-  ## Plot based on total rooms
-ggplot(data = filter(plot_data, avg_price < 5000, BORO_NUM == 3, (total_rooms == 1 | total_rooms == 2 | total_rooms == 3 | total_rooms == 4 | total_rooms == 5 | total_rooms == 6)), aes(x = DBN, y = avg_price, color = as.factor(total_rooms))) + 
-  geom_point()+
-  xlab('Schools') + 
-  ylab('Average Price') +
-  ggtitle('Average Price Per School Zone By Total Room Numbers') +
-  theme(legend.title=element_blank(),
-        axis.text.x=element_text(angle=80, hjust=1),
-        legend.background = element_rect(fill = "transparent"))
-###
-#Median price Sold ;)
-###
-
-##8) Group by borough and DBN and get median average price
-plot_data <- df %>%
-  group_by(DBN, borough) %>% 
-  summarize(med_price = median(price/sqft))
-
-##9) Plot the average price per school zone faceted
-ggplot(data = plot_data, aes(x = DBN, y = med_price)) + 
-  geom_point()+
-  xlab('List of Schools') + 
-  ylab('Median Price') +
-  facet_wrap(~ borough, scale="free", ncol=1) +
-  ggtitle('Median Price Per School Zone') +
-  theme(legend.title=element_blank(),
-        axis.text.x=element_text(angle=80, hjust=1),
-        legend.background = element_rect(fill = "transparent"))
-
-##10) Plot the median average price per school zone, colored each borough
-ggplot(data = plot_data, aes(x = DBN, y = med_price, color = as.factor(borough))) + 
-  geom_point()+
-  xlab('Schools') + 
-  ylab('Median Price') +
-  ggtitle('Median Price Per School Zone') +
-  theme(legend.title=element_blank(),
-        axis.text.x=element_text(angle=80, hjust=1),
-        legend.background = element_rect(fill = "transparent"))
-
-##11) Group by bedrooms, bathrooms, borough and school
-plot_data <- df %>%
-  group_by(DBN, bedrooms, baths, borough) %>% 
-  summarize(med_price = median(price/sqft))
-
-  ## Order the data
-plot_data <- plot_data %>%
-  ungroup() %>%
-  mutate(DBN=reorder(DBN, med_price))
-
-##12) By borough, check the median average price per square feet by bedroom
-ggplot(data = filter(plot_data, (bedrooms == 0 | bedrooms == 1 | bedrooms == 2 | bedrooms == 3)), aes(x = DBN, y = med_price, color = as.factor(bedrooms))) + 
-  geom_point()+
-  xlab('Schools') + 
-  ylab('Median Price') +
-  ggtitle('Median Price Per School Zone By Bedroom Numbers') +
-  facet_wrap( ~ borough) +
-  theme(legend.title=element_blank(),
-        axis.text.x=element_text(angle=80, hjust=1),
-        legend.background = element_rect(fill = "transparent"))
-
-  ## Separate each borough into its own mapping for better looks
-ggplot(data = filter(plot_data, (bedrooms == 0 | bedrooms == 1 | bedrooms == 2 | bedrooms == 3)), aes(x = DBN, y = med_price, color = as.factor(bedrooms))) + 
-  geom_point()+
-  xlab('Schools') + 
-  ylab('Median Price') +
-  ggtitle('Median Price Per School Zone By Bedroom Numbers') +
-  theme(legend.title=element_blank(),
-        axis.text.x=element_text(angle=80, hjust=1),
-        legend.background = element_rect(fill = "transparent"))
-
-##13) Make a new column addint the total number of rooms
-plot_data$total_rooms = plot_data$bedrooms + plot_data$baths
-
-  ##Order the data
-plot_data <- plot_data %>%
-  ungroup() %>%
-  mutate(DBN=reorder(DBN, med_price))
-
-  ## Plot based on total rooms
-ggplot(data = filter(plot_data, (total_rooms == 1 | total_rooms == 2 | total_rooms == 3 | total_rooms == 4 | total_rooms == 5 | total_rooms == 6)), aes(x = DBN, y = med_price, color = as.factor(total_rooms))) + 
-  geom_point()+
-  xlab('Schools') + 
-  ylab('Median Price') +
-  ggtitle('Median Price Per School Zone By Total Room Numbers') +
-  theme(legend.title=element_blank(),
-        axis.text.x=element_text(angle=80, hjust=1),
-        legend.background = element_rect(fill = "transparent"))
-
-####################
-##14) Looking for all the names for each neighborhood and thier total sum
-
-df3 <- complete_listings %>% group_by(neighborhood) %>% summarize(num = n())
-View(df3)
-
-###############################################################################################
-##                            Modeling The NYC Sold Listing Sales Data                      ##
-###############################################################################################
-
+## Set random seed for splitting into training and test data
 set.seed(808)
 
-## Removing the nas for beds, baths, DBN, and borough is the complete listing dataset
-df <- complete_listings[!is.na(complete_listings$bedrooms) & 
-                          !is.na(complete_listings$baths) & 
-                          !is.na(complete_listings$DBN) & 
-                          !is.na(complete_listings$borough) &
-                        #!is.na(complete_listings$unit_type) &
-                         #!is.na(complete_listings$neighborhood) &
-                         complete_listings$bedrooms < 4, ]
-
-# Filter the data frame to avoid bad data outliers in the sqft
-df2 <- filter(df, price <= 2.5e6, sqft > 100)
-
-
-#### Used to help find outliers in the data. Use above command unless needed. #####
-# ## Filter the data-frame so we can obtain only the the Upper West Side and Park Slope neighborhoods
-# df2 <- filter(df, price <= 2.5e6, neighborhood == "Upper West Side" | 
-#                 neighborhood == "Park Slope"| 
-#                 neighborhood == "Williamsburg" | 
-#                 neighborhood == "Upper East Side" | 
-#                 neighborhood == "Sunset Park"|
-#                 neighborhood == "Greenpoint" |
-#                 neighborhood == "East Williamsburg"|
-#                 neighborhood == "Bushwick"|
-#                 neighborhood == "Battery Park City"|
-#                 neighborhood == "Bay Ridge"|
-#                 neighborhood == "Bedford Park")
-
-## We drop unused levels from a factor in a data frame 
-df2 <- mutate(df2, DBN = droplevels(DBN))
-
 ## We split the the dataframe f into a test and train data
-num_train <- round(nrow(df2) * 0.75)
-ndx <- sample(nrow(df2), num_train)
-train <- df2[ndx, ]
-test <- df2[-ndx, ]
+num_train <- round(nrow(df) * 0.75)
+ndx <- sample(nrow(df), num_train)
+train <- df[ndx, ]
+test <- df[-ndx, ]
 
-# ########################             # GLMNET() #             ######################### #
+########################################################
+#            Original Plotting with pure data          #
+########################################################
 
 ##  Prep the training data for input into glmnet
 x = model.matrix(I(price/sqft) ~ DBN + bedrooms + baths + 
@@ -241,8 +42,10 @@ xT = model.matrix(I(price/sqft) ~ DBN + bedrooms + baths + borough, data = test)
 yT = test$price/test$sqft
 
 ## Run the actual glmnet function to get a model
-cvfit = cv.glmnet (x, y)# Grab the coefficients of each variable in the equation
-coef(cvfit, s="lambda.min")
+cvfit = cv.glmnet (x, y)
+
+## Grab the coefficients of each variable in the equation
+coef(cvfit, s = "lambda.min")
 
 ## Predict on the testing data with the lambda minimized
 cvpred <- predict(cvfit, newx = x, s = "lambda.min")
@@ -250,19 +53,19 @@ cvpred <- predict(cvfit, newx = x, s = "lambda.min")
 ## Change prediction to easy view
 cvpred <- data.frame(cvpred)
 
-# Set the predictions and true values next to each other for the training set
+## Set the predictions and actual values next to each other for the training set
 pred <- cbind(cvpred, y)
 
-## Get correlation between the predictions and the truth
+## Get correlation between the predictions and the actuals for the training set
 cor(cvpred, y)
 
-# Graph the true vals vs predictions for training set
+# Graph the actual vals vs predictions for training set
 ggplot(data = filter(pred, X1 <= 10000, y <= 5000), aes(x = X1, y = y)) + 
   geom_point()+
   geom_abline(data = pred,  stat = "abline", position = "identity", show_guide = FALSE)+
-  xlab('Predicted ppsqft') + 
-  ylab('True Ppsqft') +
-  ggtitle('True Ppsqft vs Predicted ppsqft For Training Data') +
+  xlab('Predicted Price Per Sq Ft') + 
+  ylab('True Price Per Sq Ft') +
+  ggtitle('Actual Price Per Sq Ft vs Predicted Price Per Sq Ft For Training Data') +
   theme(legend.title=element_blank(),
         axis.text.x=element_text(angle=80, hjust=1),
         legend.background = element_rect(fill = "transparent"))
@@ -270,29 +73,25 @@ ggplot(data = filter(pred, X1 <= 10000, y <= 5000), aes(x = X1, y = y)) +
 ## Predict on the testing data with the lambda minimized
 cvpred <- predict(cvfit, newx = xT, s = "lambda.min")
 
-## Change prediction to easy view
+## Change predictions to easy view
 cvpred <- data.frame(cvpred)
 
-## Get correlation between the predictions and the truth
+## Get correlation between the predictions and the actual values for test set
 cor(cvpred, yT)
 
-# Set the predictions and true values next to each other for the test set
-pred2 <- cbind(cvpred, yT)
-View(pred2)
+## Set the predictions and actuals values next to each other for the test set
+pred <- cbind(cvpred, yT)
 
-# Plot the true Price Per psqft vs Predicted ppsqft For Test Data
+## Plot Actual Price vs Predicted Price for test data
 ggplot(data = filter(pred2, yT <= 5000), aes(x = X1, y = yT)) + 
   geom_point()+
   geom_abline(data = pred,  stat = "abline", position = "identity", show_guide = FALSE)+
-  xlab('Predicted ppsqft') + 
-  ylab('True Ppsqft') +
-  ggtitle('True Price Price per sqft vs Predicted ppsqft For Test Data') +
+  xlab('Predicted Price Per Sq Ft') + 
+  ylab('True Price Per Sq Ft') +
+  ggtitle('Actual Price Per Sq Ft vs Predicted Price Per Sq Ft For Test Data') +
   theme(legend.title=element_blank(),
         axis.text.x=element_text(angle=80, hjust=1),
         legend.background = element_rect(fill = "transparent"))
-
-## Plot the cvfit to see the the lambda  and mean square error
-plot(cvfit)
 
 ## The quantile function gives us 100 equal groups into which a population can be divided 
 ## according to the distribution of values of a particular variable
@@ -305,26 +104,138 @@ mean((cvpred - yT)^2)/nrow(test)
 mean((cvpred - yT)^2)
 
 
-###############################################################################################
-###                                         Making a Linear Model                         ###
-###############################################################################################
-## Make a linear model
-models.lm = lm(price ~ DBN*price + bedrooms + baths + borough, data = train)
+#################################################################
+# Plotting the stratification of predictions on real test data  #
+#################################################################
 
-modelVal <- predict(models.lm, newdata = train)
-modelFrame <- data.frame(modelVal)
-summary(models.lm)$r.squared 
-summary(models.lm)
-View(modelFrame)
+# Make a data frame with only relevant columns
+testWPred <- cbind(test, pred)
+testWPred <- testWPred[ , c("DBN", "bedrooms", "price_per_sqft", "X1")]
+View(testWPred)
 
-## Make polynomial models
-models.lm <-lm(price ~ poly(bedrooms, 2, raw=TRUE) + 
-           DBN*poly(baths, 1, raw=TRUE) + DBN, data = train)
+# Order the data for readable plotting
+plot_data <- testWPred %>%
+  ungroup() %>%
+  mutate(DBN=reorder(DBN, X1))
 
-modelVal <- predict(models.lm, newdata = train)
-modelFrame <- data.frame(modelVal)
+# Plot the stratification of bedrooms by DBN for real data
+ggplot(data = filter(plot_data, bedrooms >= 0), aes(x = DBN, y = X1, color = as.factor(bedrooms))) + 
+         geom_point()+
+         xlab('DBN') + 
+         ylab('Prediction') + 
+         ggtitle('Stratification of Bedrooms by DBN') +
+         theme(legend.title = element_blank(),
+            axis.text.x = element_text(angle=80, hjust=1),
+            legend.background = element_rect(fill = "transparent"))
+       
 
-## Obtaining a simple statistical analyses 
-summary(models.lm)$r.squared 
-summary(models.lm)
-View(modelFrame)
+################################################################
+# Fake data to test change in price by bedroom count, BK only  #
+################################################################
+
+## Filter any data outside of Brooklyn
+fakeTrainTest <- filter(df, borough == "Brooklyn")
+
+##  Prep the training data for input into glmnet, but only for Brooklyn for some testing
+x = model.matrix(I(price/sqft) ~ DBN + bedrooms + baths, data = fakeTrainTest)
+y = fakeTrainTest$price/fakeTrainTest$sqft
+
+## Run the glmnet function to get a model
+cvfit = cv.glmnet (x, y)
+
+## Create fake data w/ expand.grid, based on real data
+fakeTest <- expand.grid(DBN = unique(fakeTrainTest$DBN), bedrooms = c(0, 1, 2, 3), baths = mean(fakeTrainTest$baths), price = 1, sqft = 1)
+
+## Make a matrix of the fake test data
+xF = model.matrix(I(price/sqft) ~ DBN + bedrooms + baths, data = fakeTest)
+
+## Predict on the fake testing data with the lambda minimized
+fakeDataPred <- predict(cvfit, newx = xF, s = "lambda.min")
+
+## Change prediction to easy view
+fakeDataPred <- data.frame(fakeDataPred)
+
+## Make a data frame with real values versus predictions
+testWPred <- cbind(fakeTest, fakeDataPred)
+
+## Order the data for easy plotting
+plot_data <- testWPred %>%
+  mutate(DBN=reorder(DBN, X1))
+
+## Plot the stratification of bedrooms by DBN, just for BK
+ggplot(data = filter(plot_data, bedrooms >= 0), aes(x = DBN, y = X1, color = as.factor(bedrooms))) + 
+  geom_point()+xlab('DBN') + 
+  ylab('Prediction') + 
+  ggtitle('Stratification of Bedrooms by DBN in Brooklyn') +
+  theme(legend.title=element_blank(),
+        axis.text.x=element_text(angle=80, hjust=1),
+        legend.background = element_rect(fill = "transparent"))
+
+
+###########################################################################
+# Fake data to test change in price by bedrooms for all boroughs at once  #
+###########################################################################
+
+## Temporary variable to work on for this plot
+fakeTrainOrig <- df
+
+#### To avoid that occur in expand.data, we'll instead prep fake data differently ####
+  # Essentially, when using expand.data, there's no way to tell which of the original
+  # data points were in which borough, as it's declared in order rather than
+  # by the actual borough. This skewed the data depending on chance rather than reality.
+  # By prepping the data this way, we make sure that the borough for a given row
+  # is the same as the original borough so that the fake test data reflects
+  # the borough properly.
+
+## Grab necessary fields and summarize on a dummy variable
+fakeTest <- df %>% group_by(DBN, borough) %>% summarize(baths = mean(baths))
+
+## Declare dummy variable equal to the real value we want, which is
+# the avg number of bathrooms over all data
+fakeTest$baths = mean(df$baths)
+
+## Create a new vector to vary over bedroom count
+beds <- data.frame(bedrooms = c(0, 1, 2, 3))
+
+## Add dummy vectors for price and sqft, as glmnet forces us to make the fields
+  ## the same in the model and the data to predict on to run properly
+price <- data.frame(price = 1)
+sqft <- data.frame(sqft = 1)
+
+## Merge all vectors to create the final fake data frame
+fakeTest <- merge(fakeTest, beds, all = T)
+fakeTest <- merge(fakeTest, price, all = T)
+fakeTest <- merge(fakeTest, sqft, all = T)
+
+##  Prep the training data for input into glmnet, but only for Manhattan for some testing
+x = model.matrix(I(price/sqft) ~ DBN + bedrooms + baths + borough, data = fakeTrainOrig)
+y = fakeTrainOrig$price/fakeTrainOrig$sqft
+
+## Run the actual glmnet function to get a model
+cvfit = cv.glmnet (x, y)
+
+## Make a matrix of the data to predict on
+xF = model.matrix(I(price/sqft) ~ DBN + bedrooms + baths + borough, data = fakeTest)
+
+## Predict on the fake data with the lambda minimized
+fakeDataPred <- predict(cvfit, newx = xF, s = "lambda.min")
+
+## Change predictions to easy view
+fakeDataPred <- data.frame(fakeDataPred)
+
+## Bind the fake testing data to the predictions for comparison for plotting
+testWPred <- cbind(fakeTest, fakeDataPred)
+
+## Order the data for readable plotting
+plot_data <- testWPred %>%
+  mutate(DBN = reorder(DBN, X1))
+
+## Plot the stratification of bedrooms by DBN
+ggplot(data = filter(plot_data, bedrooms >= 0), aes(x = DBN, y = X1, color = as.factor(bedrooms))) + 
+  geom_point()+xlab('DBN') + 
+  ylab('Prediction') + 
+  ggtitle('Stratification of bedrooms by DBN') +
+  facet_wrap(~ borough) +
+  theme(legend.title = element_blank(),
+        axis.text.x = element_text(angle = 80, hjust = 1),
+        legend.background = element_rect(fill = "transparent"))
