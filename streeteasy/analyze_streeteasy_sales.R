@@ -1,6 +1,6 @@
 #By: Glenda Ascencio, Riley H                                             July 24, 2015
 ##########################################################################################
-##                  Answering Some Questions NYC Sold Listing Data                     ##
+##            Answering Some Questions from the NYC Sold Listing Data                   ##
 ##########################################################################################
 
 ## Downloading the requered libraries
