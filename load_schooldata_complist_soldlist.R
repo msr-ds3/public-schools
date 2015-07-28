@@ -17,4 +17,5 @@ filter_listings <- complete_listings[!is.na(complete_listings$bedrooms) &
 # add DBN to tthe table and join df with schooldata
 filter_listings <- mutate(filter_listings, DBN = droplevels(DBN))
 schools_zone_sales<-inner_join(schooldata, filter_listings, by = "DBN")
+rm(complete_listings,sold_listings,schooldata, filter_listings)
 save(schools_zone_sales, file="compl_school.RData")
