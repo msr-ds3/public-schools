@@ -1,4 +1,6 @@
-
+library(ggplot2)
+library(dplyr)
+library(glmnet)
 
 schools_zone_sales <- schools_zone_sales %>% mutate(DBN = as.factor(DBN))
 schools_zone_sales <-filter(schools_zone_sales, sqft >100, sqft<2000, price_per_sqft < 4000)
@@ -20,15 +22,17 @@ summary(school.lm)
 test$predict_test <- predict(school.lm, test)
 #ggplot with point and line
 ggplot(test, aes(x=price_per_sqft,y=predict_test)) +  xlab("Actual ") +
-ylab("Predicted") + ggtitle("Actual vs Predicted Test Scores") + geom_abline()+
-geom_point(aes(color = `Environment Rating`))
+  ylab("Predicted") + ggtitle("Actual vs Predicted Test Scores") + geom_abline()+
+  geom_point(aes(color = `Environment Rating`))
 
 
-x = model.matrix(I(price_per_sqft ) ~ bedrooms + baths + mean + DBN + `% Poverty` + `% White` + `% Hispanic` + `% Asian` + neighborhood, data = train)
+x = model.matrix(I(price_per_sqft ) ~ baths + mean  + `% Poverty` + `% White` + `% Hispanic` 
+                 + `% Asian` + neighborhood + (bedrooms*DBN), data = train)
 y = train$price_per_sqft 
 cvfit = cv.glmnet (x, y)
 
-xt =  model.matrix(I(price_per_sqft ) ~ bedrooms + baths + mean + DBN + `% Poverty` + `% White`  + `% Hispanic` + `% Asian`  + neighborhood, data = test)
+xt =  model.matrix(I(price_per_sqft ) ~ baths + mean + `% Poverty` + `% White`  
+                   + `% Hispanic` + `% Asian` + neighborhood + (bedrooms*DBN), data = test)
 yt = test$price_per_sqft 
 cvpred <- predict(cvfit, newx = xt, s = "lambda.min")
 
@@ -41,7 +45,10 @@ plot(cvfit)
 
 coef(cvfit, s = "lambda.min")
 
+
 sqrt(mean((cvpred$X1 - yt)^2))
+median(abs(cvpred$X1 - yt))
+
 
 ggplot(cvpred, aes(y=X1, x=yt)) +  xlab("Actual ") +
   ylab("Predicted") + ggtitle("Actual vs Predicted Test Scores") + geom_abline()+
