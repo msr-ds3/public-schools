@@ -24,9 +24,9 @@ distInKMs <- function (lat1, lat2, long1, long2) {
   return (getDfromLatLong(lat1, lat2, long1, long2))
 }
 
-######################
+###############################
 #     Load and Save Data      #
-######################
+###############################
 # Load the necessary Rdata file
 load('../compl_school.RData')
 
