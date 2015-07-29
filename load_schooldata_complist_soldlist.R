@@ -11,7 +11,7 @@ filter_listings <- complete_listings[!is.na(complete_listings$bedrooms) &
                           complete_listings$baths < 4  & 
                           complete_listings$baths > 0 & 
                           complete_listings$sqft < 50000 & 
-                          complete_listings$price_per_sqft < 6000  & 
+                          complete_listings$price_per_sqft > 100  & 
                           complete_listings$bedrooms >= 0 & 
                           complete_listings$bedrooms < 4, ]
 # add DBN to tthe table and join df with schooldata
