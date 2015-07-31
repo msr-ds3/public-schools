@@ -27,12 +27,12 @@ ggplot(test, aes(x=price_per_sqft,y=predict_test)) +  xlab("Actual ") +
 
 
 x = model.matrix(I(price_per_sqft ) ~ baths + mean  + `% Poverty` + `% White` + `% Hispanic` 
-                 + `% Asian` + neighborhood + (bedrooms*DBN), data = train)
+                 + `% Asian` + (bedrooms*DBN) +num_unique_lines+num_closeby_stations + dist.1, data = train)
 y = train$price_per_sqft 
 cvfit = cv.glmnet (x, y)
 
-xt =  model.matrix(I(price_per_sqft ) ~ baths + mean + `% Poverty` + `% White`  
-                   + `% Hispanic` + `% Asian` + neighborhood + (bedrooms*DBN), data = test)
+xt = model.matrix(I(price_per_sqft ) ~ baths + mean  + `% Poverty` + `% White` + `% Hispanic` 
+                  + `% Asian` + (bedrooms*DBN) +num_unique_lines+num_closeby_stations +dist.1, data = test)
 yt = test$price_per_sqft 
 cvpred <- predict(cvfit, newx = xt, s = "lambda.min")
 
@@ -42,13 +42,10 @@ cvpred <- data.frame(cvpred)
 cor(cvpred, yt)^2
 ## Plot the cvfit to see the the lambda  and mean square error
 plot(cvfit)
-
 coef(cvfit, s = "lambda.min")
-
 
 sqrt(mean((cvpred$X1 - yt)^2))
 median(abs(cvpred$X1 - yt))
-
 
 ggplot(cvpred, aes(y=X1, x=yt)) +  xlab("Actual ") +
   ylab("Predicted") + ggtitle("Actual vs Predicted Test Scores") + geom_abline()+
