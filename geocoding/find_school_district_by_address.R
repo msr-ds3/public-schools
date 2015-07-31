@@ -7,7 +7,7 @@ library(stringr)
 
 create_city_basemap <- function(cityname, long=NULL, lat=NULL) {
   # Creates a map of a location
-  if (is.null(long)){
+  if (!is.null(long)){
     centre_map = data.frame(lon=c(long), lat=c(lat))
   }
   else{
@@ -18,7 +18,7 @@ create_city_basemap <- function(cityname, long=NULL, lat=NULL) {
   return(city_mapdata)
 }
 
-load_shapefile <- function(filepath, shapefile_name){
+create_school_mapdata <- function(filepath, shapefile_name){
   # Returns the mapdata (area polygons) for school zones
   
   shapefile = readOGR(dsn=filepath, layer=shapefile_name)
