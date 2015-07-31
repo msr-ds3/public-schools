@@ -9,6 +9,7 @@ library(dplyr)
 library(readxl)
 library(tidyr)
 
+source('../geocoding/plot_map_example.R')
 
 #################################################################
 ## NOTE: This must be run from the streeteasy directory!!! ######
@@ -33,12 +34,19 @@ for (borough in c("manhattan","brooklyn","bronx","queens", "statenisland")) {
 }
 colnames(sold_listings) <- columns
 
+# remove duplicate listings:
+#   remove the school name and listing agent
+#   replace empty zip codes with NAs
+#   then uniquify the data frame
+#   this leaves just a handful of duplicates on closing price
+sold_listings <- sold_listings %>%
+  select(-school_name, -listing_agent) %>%
+  mutate(zip_code=ifelse(zip_code == "", NA, zip_code)) %>%
+  unique
+
 ##########################################
 ###### MERGE DATA WITH SCHOOL DATA #######
 ##########################################
-
-## Load the data if you already have it
-load("streeteasy_sales.RData")
 
 # Get the functions from find_school file
 source("../geocoding/find_school_district_by_address.R")
