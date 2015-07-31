@@ -8,6 +8,7 @@
 library(dplyr)
 library(readxl)
 library(tidyr)
+require(lubridate)
 
 
 #################################################################
@@ -70,8 +71,20 @@ sold_listings <- cbind(latLongListings, matched_school_zones)
 ##                          Data Cleaning                                    ##
 ###############################################################################
 ##### Run from the streeteasy directory again. ###########
+
+# Store the formula to make the start and end dates to dates.
+parse_datetime <- function(s, format="%d %b %Y") {
+  as.POSIXct(as.character(s), format=format) #It forces to be a data instead of a character
+}
+
+# Transform to date format
+complete_listings <- transform(sold_listings, start_date = parse_datetime(start_date), end_date = parse_datetime(end_date))
+
+# Limit to end_dates only after 2013.
+complete_listings <- complete_listings[complete_listings$end_date >= "2013-01-01", ]
+
 ## Removing all the useless data, that finds any NA values or sqft = 0
-complete_listings <- sold_listings[!is.na(sold_listings$bedrooms), ]
+complete_listings <- complete_listings[!is.na(complete_listings$bedrooms), ]
 complete_listings <- complete_listings[!is.na(complete_listings$sqft), ]
 complete_listings <- complete_listings[complete_listings$sqft > 0, ]
 
