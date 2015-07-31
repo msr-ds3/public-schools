@@ -18,11 +18,11 @@ create_city_basemap <- function(cityname, long=NULL, lat=NULL) {
   return(city_mapdata)
 }
 
-create_school_mapdata <- function(filepath, shapefile_name){
+load_shapefile <- function(filepath, shapefile_name){
   # Returns the mapdata (area polygons) for school zones
   
-  schools_shapefile = readOGR(dsn=filepath, layer=shapefile_name)
-  t_shapefile<- spTransform(schools_shapefile, CRS("+proj=longlat +datum=WGS84"))
+  shapefile = readOGR(dsn=filepath, layer=shapefile_name)
+  t_shapefile<- spTransform(shapefile, CRS("+proj=longlat +datum=WGS84"))
   return(t_shapefile)
 }
 
@@ -41,20 +41,21 @@ Main <- function() {
   shapefile <- "ES_Zones_2013-2014"
   input_addresses_file <- "street_addresses.csv"
 
-  school_zone_boundaries <- create_school_mapdata(filepath, shapefile)
+  boundaries <- load_shapefile(filepath, shapefile)
+
+  proj4string(address_data) <- proj4string(boundaries)  
   address_data <- get_addresses(input_addresses_file)
-  proj4string(address_data) <- proj4string(school_boundaries)
   
   # Match each address to a school zone. 
-  matched_school_zones <- over(address_data, school_boundaries)
+  matched_areas <- over(address_data, school_boundaries)
   
   # create the final merged df with both address and school zone information
-  merged_data <- cbind(address_data, matched_school_zones)
-  write.csv(merged_data, "addresses_with_school_zones.csv")
+  merged_data <- cbind(address_data, matched_areas)
+  write.csv(merged_data, "matched_areas_with_points.csv")
   # Mapping school zones, for fun
-  schools_df <- fortify(school_zone_boundaries)
+  plot_df <- fortify(boundaries)
   nyc_map <- create_city_basemap("New York, NY")
-  nyc_school_map <- ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, group=group), fill='grey', size=.2,color='red', data=school_zone_boundaries, alpha=.5)
+  nyc_school_map <- ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, group=group), fill='grey', size=.2,color='red', data=boundaries, alpha=.5)
 
 }
 
