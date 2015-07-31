@@ -12,17 +12,18 @@ subway_data = subway_data %>% distinct(station_id)
 houses <-  data.frame(schools_zone_sales$latitude, schools_zone_sales$longitude)
 colnames(houses)[1] <-"latitude"
 colnames(houses)[2] <-"longitude"
-houses_dist <- ppp(df$latitude, df$longitude, c(min(df$latitude), max(df$latitude)), c(min(df$longitude),max(df$longitude)))
+houses_dist <- ppp(houses$latitude, houses$longitude, c(min(houses$latitude), max(houses$latitude)),
+                  c(min(houses$longitude),max(houses$longitude)))
 
 #for subway data
 subway_stations <- data.frame(subway_data$latitude, subway_data$longitude) # this would be subway stops
 colnames(subway_stations )[1] <-"latitude"
 colnames(subway_stations )[2] <-"longitude"
-subway_dist <- ppp(df2$latitude, df2$longitude, c(min(df2$latitude), max(df2$latitude)), c(min(df2$longitude),max(df2$longitude)))
+subway_dist <- ppp(subway_stations$latitude, subway_stations$longitude, c(min(subway_stations$latitude), max(subway_stations$latitude)), 
+                   c(min(subway_stations$longitude),max(subway_stations$longitude)))
 
 #distance between subway and houses
-dist_btwn_house_subway<-nncross(pobj, pobj2, k = 1:5) 
-hist(mp$dist.1, breaks = seq(0,0.1,0.001))
+dist_btwn_house_subway<-nncross(houses_dist, subway_dist, k = 1:5) 
 cutoff<-0.0144
 
 # for first feature
