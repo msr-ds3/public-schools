@@ -9,8 +9,6 @@ library(dplyr)
 library(readxl)
 library(tidyr)
 
-source('../geocoding/plot_map_example.R')
-
 #################################################################
 ## NOTE: This must be run from the streeteasy directory!!! ######
 #################################################################
