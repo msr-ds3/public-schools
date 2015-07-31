@@ -26,7 +26,7 @@ columns <- c('url','unit_type','price','status','neighborhood','borough','school
 
 # Store the data in a data frame, then rename the columns appropriately
 sold_listings <- data.frame()
-for (borough in c("manhattan","brooklyn","bronx","queens")) {
+for (borough in c("manhattan","brooklyn","bronx","queens", "statenisland")) {
   csv <- sprintf("%s_sold.csv", borough)
   tmp <- read.csv(csv, stringsAsFactors = FALSE, sep=',', header=F)
   sold_listings <- rbind(sold_listings, tmp)
