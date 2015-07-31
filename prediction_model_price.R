@@ -3,7 +3,7 @@ library(dplyr)
 library(glmnet)
 
 schools_zone_sales <- schools_zone_sales %>% mutate(DBN = as.factor(DBN))
-schools_zone_sales <-filter(schools_zone_sales, sqft >100, sqft<2000, price_per_sqft < 4000)
+schools_zone_sales <-filter(schools_zone_sales, sqft >100, sqft<2000)
 schools_zone_sales$mean=rowMeans(schools_zone_sales[,c("Mean Scale Score Math", "Mean Scale Score English")], na.rm=TRUE)
 # randomly select 80% of the data to train the model on
 # and 20% to test on
@@ -14,7 +14,7 @@ train <- schools_zone_sales[ndx, ]
 test <- schools_zone_sales[-ndx, ]
 test <- test[test$DBN %in% train$DBN, ]
 test <- test[test$neighborhood %in% train$neighborhood, ]
-
+train <- filter(train, price_per_sqft <= 6000)
 rm(ndx, num_train, complete_listings, schooldata, sold_listings)
 
 school.lm <-lm(price_per_sqft ~ bedrooms + baths + mean + DBN, data = train)
