@@ -2,6 +2,8 @@ library(ggplot2)
 library(dplyr)
 library(glmnet)
 
+load('../public-schools/compl_school.RData')
+
 schools_zone_sales <- schools_zone_sales %>% mutate(DBN = as.factor(DBN))
 schools_zone_sales <-filter(schools_zone_sales, sqft >100, sqft<2000)
 schools_zone_sales$mean=rowMeans(schools_zone_sales[,c("Mean Scale Score Math", "Mean Scale Score English")], na.rm=TRUE)
