@@ -8,10 +8,11 @@ library(tidyr)
 ################↓↓↓↓↓↓YOU MUST DO THIS STEP MANUALLY↓↓↓↓↓↓###############
 ################CHANGE SCHOOL DIRECTORY TO A CSV FILE############################
 #################################################################################
-
+## Amit: changed it so that we do not need to manually convert.
+schooldirectory = read_excel("schools/schooldirectory.xls")
 
 #Load file containing directory and basic info of all high schools
-schooldirectory <- read.csv("schools/schooldirectory.csv", header = TRUE)
+#schooldirectory <- read.csv("schools/schooldirectory.csv", header = TRUE)
 
 #Load file containing school quality report
 schooltarget <- read_excel("schools/schoolratings.xlsx", col_names = TRUE, skip = 1)
@@ -112,7 +113,7 @@ schooldata <- merge(x = schooldata, y = classes, by = "DBN", all.x = FALSE)
 
 #Remove Columns
 schooldata <- schooldata %>% select(DBN, streeteasy_id, 
-                                    `School Name`,`School Type`, District , Primary.Address, City, Zip, 
+                                    `School Name`,`School Type`, District , `Primary Address`, City, Zip, 
                                     `Achievement Rating`, `Environment Rating`, `Total Enrollment`, `% Female`, 
                                     `% Male`,  `% Asian`, `% Black`, `% Hispanic`, `% White`, `% Poverty`, `Mean Scale Score Math`, `% English Language Learners`, 
                                     `Mean Scale Score English`, `Student Ratio`)
