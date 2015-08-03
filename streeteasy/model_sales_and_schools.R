@@ -1,6 +1,6 @@
-########################################################################################
-##                      Modeling The NYC Sold Listing Sales Data                      ##
-########################################################################################
+#############################################################################
+##                      Modeling The Complete Dataset                      ##
+#############################################################################
 
 ## Get the required libraries
 library(ggplot2)
@@ -9,9 +9,9 @@ library(locfit)
 library(glmnet)
 
 ## Load the data for modeling
-load('../compl_school.RData')
+load('../complete_data.RData')
 
-schools_zone_sales <-filter(schools_zone_sales, sqft > 100)
+## Create a new column with the mean scores over Math and English
 schools_zone_sales$meanScores = rowMeans(schools_zone_sales[,c("Mean Scale Score Math", "Mean Scale Score English")], na.rm=TRUE)
 
 ## Rename the original data for ease in modeling
@@ -197,6 +197,7 @@ testWPred <- cbind(fakeTest, fakeDataPred)
 plot_data <- testWPred %>%
   mutate(DBN = reorder(DBN, X1))
 
+## Save this plotting data for plot_sales_map.R
 save(plot_data, file = "plotDataWNeighborhoods.RData")
 
 
@@ -226,8 +227,6 @@ testWPred <- cbind(fakeTest, fakeDataPred)
 ## Order the data for readable plotting
 plot_data_wo_schools <- testWPred %>%
   mutate(DBN = reorder(DBN, X1))
-
-save(plot_data, plot_data_wo_schools, file = "dataForPlottingInMap.RData")
 
 ## Filter out bad configurations of beds and baths.
 # If chosen we can do this in the plot itself and calculate.
