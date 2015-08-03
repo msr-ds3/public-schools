@@ -73,7 +73,7 @@ schooldirectory$Location.Name <- NULL
 schooldata <- merge(x = schooltarget, y = schooldirectory, by = "DBN", all.x = TRUE)
 
 # Removing charter schools that are unzoned
-schooldata<-schooldata[!(schooldata$District==84),]
+schooldata<-schooldata[!(schooldata$District==84), ]
 
 
 ################################
@@ -82,7 +82,7 @@ schooldata<-schooldata[!(schooldata$District==84),]
 demographics <- read_excel("schools/demographics.xlsx", col_names = TRUE, sheet = 4)
 
 # Filter out to the most recent data
-demographics <- demographics %>%  filter(Year == "2014-15")
+demographics <- demographics %>% filter(Year == "2014-15")
 
 # Remove extra column
 demographics$`School Name` <- NULL
@@ -131,42 +131,26 @@ colnames(math)[2] <- "Mean Scale Score Math"
 
 # Add data to main schooldata
 schooldata <- merge(schooldata, math, by = "DBN")
-schooldata <-merge(schooldata, english, by = "DBN")
+schooldata <- merge(schooldata, english, by = "DBN")
 
-##########################
-# Load Class Number data #
-##########################
-classes <- read_excel("schools/classsizes.xlsx", skip = 8)
-
-# Create New Column with DBN number
-classes$DBN = paste(classes$CSD, classes$`SCHOOL CODE`, sep="")
-
-# Delele All rows with NAs in their student-teacher ratio
-classes <-classes[!(is.na(classes$`SCHOOLWIDE PUPIL-TEACHER RATIO`)),]
-
-# Keep Only DBN and ratio data
-classes <- classes %>% select(DBN,`SCHOOLWIDE PUPIL-TEACHER RATIO`)
-
-# Rename column 
-colnames(classes)[2] <- "Student Ratio"
-
-# Merging school data and class data
-schooldata <- merge(x = schooldata, y = classes, by = "DBN", all.x = FALSE)
+##################################
+#  Load Environment Rating Data  #
+##################################
 
 # Remove Columns
 schooldata <- schooldata %>% select(DBN, streeteasy_id, 
                                     `School Name`,`School Type`, District , `Primary Address`, City, Zip, 
                                     `Achievement Rating`, `Environment Rating`, `Total Enrollment`, `% Female`, 
                                     `% Male`,  `% Asian`, `% Black`, `% Hispanic`, `% White`, `% Poverty`, `Mean Scale Score Math`, `% English Language Learners`, 
-                                    `Mean Scale Score English`, `Student Ratio`)
+                                    `Mean Scale Score English`)
 
-# Deleting all NAs 
+# Recode all NAs 
 schooldata <- schooldata %>%
   mutate("Environment Rating"=ifelse(`Environment Rating` == "N/A", NA, `Environment Rating`))
 schooldata <- schooldata %>%
   mutate("Achievement Rating"=ifelse(`Achievement Rating` == "N/A", NA, `Achievement Rating`))
 
-# Creating a list with all the level
+# Creating a list with all the levels
 env_levels <- c("Not Meeting Target","Approaching Target","Meeting Target","Exceeding Target")
 
 # Change from character to numeric
