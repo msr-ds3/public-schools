@@ -72,7 +72,7 @@ mkdir geocoding
 
 cd geocoding
 
-wget -O nyc_school_shapefiles_2014.zip https://data.cityofnewyork.us/api/geospatial/pp5b-95kq?method=export&format=Shapefile
+wget -O nyc_school_shapefiles_2014.zip https://data.cityofnewyork.us/api/geospatial/pp5b-95kq?method=export\&format=Shapefile
 
 unzip nyc_school_shapefiles_2014.zip
 
