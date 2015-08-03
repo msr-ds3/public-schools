@@ -39,12 +39,12 @@ test <- df[-ndx, ]
 #### ON TRAINING DATA ####
 ##########################
 ## Make a matrix with training data for use in GLMNET()
-x = model.matrix(I(price/sqft) ~ baths + mean  + `% Poverty` + `% White` + `% Hispanic` 
+x = model.matrix(I(price/sqft) ~ baths + meanScores  + `% Poverty` + `% White` + `% Hispanic` 
                  + `% Asian` + neighborhood + (bedrooms*DBN), data = train)
 y = train$price/train$sqft
 
 ## Make a matrix with testing data for use in GLMNET()
-xT =  model.matrix(I(price/sqft) ~ baths + mean + `% Poverty` + `% White`  
+xT =  model.matrix(I(price/sqft) ~ baths + meanScores + `% Poverty` + `% White`  
                    + `% Hispanic` + `% Asian` + neighborhood + (bedrooms*DBN), data = test)
 yT = test$price/test$sqft
 
@@ -173,7 +173,7 @@ fakeTest <- merge(fakeTest, baths, all = T)
 
 ##  Prep the training data for input into glmnet
 x = model.matrix(I(price/sqft) ~ baths + meanScores  + `% Poverty` + `% White` + `% Hispanic` 
-                 + `% Asian` + (bedrooms*DBN) + neighborhood, data = df)
+                 + `% Asian` + bedrooms + DBN + neighborhood, data = df)
 y = df$price/df$sqft
 
 
@@ -182,7 +182,7 @@ cvfit = cv.glmnet (x, y)
 
 ## Make a matrix of the data to predict on
 xF = model.matrix(I(price/sqft) ~ baths + meanScores  + `% Poverty` + `% White` + `% Hispanic` 
-                  + `% Asian` + (bedrooms*DBN) + neighborhood, data = fakeTest)
+                  + `% Asian` + bedrooms + DBN + neighborhood, data = fakeTest)
 
 ## Predict on the fake data with the lambda minimized
 fakeDataPred <- predict(cvfit, newx = xF, s = "lambda.min")
@@ -206,26 +206,54 @@ save(plot_data, file = "plotDataWNeighborhoods.RData")
 ###########################
 
 ##  Prep the training data for input into glmnet w/o school data
-x = model.matrix(I(price/sqft) ~ baths + (bedrooms*DBN) + neighborhood, data = df)
-y = df$price/df$sqft
+x2 = model.matrix(I(price/sqft) ~ baths + bedrooms + neighborhood, data = df)
+y2 = df$price/df$sqft
 
 ## Run the actual glmnet function to get a model
-cvfit = cv.glmnet (x, y)
+cvfit2 = cv.glmnet (x2, y2)
 
 ## Make a matrix of the data to predict on w/o school data
-xF = model.matrix(I(price/sqft) ~ baths + (bedrooms*DBN) + neighborhood, data = fakeTest)
+xF2 = model.matrix(I(price/sqft) ~ baths + bedrooms + neighborhood, data = fakeTest)
 
 ## Predict on the fake data with the lambda minimized
-fakeDataPred <- predict(cvfit, newx = xF, s = "lambda.min")
+fakeDataPred2 <- predict(cvfit2, newx = xF2, s = "lambda.min")
 
 ## Change predictions to easy view
-fakeDataPred <- data.frame(fakeDataPred)
+fakeDataPred2 <- data.frame(fakeDataPred2)
 
 ## Bind the fake testing data to the predictions for comparison for plotting
-testWPred <- cbind(fakeTest, fakeDataPred)
+testWPred2 <- cbind(fakeTest, fakeDataPred2)
+
+
+######################################################
+#     Check Data w/Schools vs Data w/o Schools       #
+######################################################
+
+#################### FIND DIFFERENCE #####################
+
+## Stick both sets of a predictions into 1 file
+allPreds <- cbind(fakeTest, fakeDataPred)
+allPreds <- cbind(allPreds, fakeDataPred2)
+
+WithSchoolDataMinusWO <- fakeDataPred$X1 - fakeDataPred2$X1
+allPreds <- cbind(allPreds, WithSchoolDataMinusWO)
+View(allPreds)
+
+pSPreds <- allPreds[allPreds$neighborhood == "Park Slope", ]
+View(pSPreds)
+
+pSPreds <- allPreds[allPreds$neighborhood == "Upper West Side", ]
+View(pSPreds)
+
+#######################
+#      GGPLOTS        #
+#######################
+
+
+
 
 ## Order the data for readable plotting
-plot_data_wo_schools <- testWPred %>%
+plot_data_wo_schools <- testWPred2 %>%
   mutate(DBN = reorder(DBN, X1))
 
 ## Filter out bad configurations of beds and baths.
