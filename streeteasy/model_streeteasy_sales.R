@@ -19,6 +19,9 @@ df <- schools_zone_sales
 df$DBN <- as.factor(df$DBN)
 df <- mutate(df, DBN = droplevels(DBN))
 
+# Remove NAs in maintenance fee
+df <- df[!is.na(df$maintenance_fee), ]
+
 ## Set random seed for splitting into training and test data
 set.seed(808)
 
@@ -32,13 +35,14 @@ test <- df[-ndx, ]
 #            Original Plotting with pure data          #
 ########################################################
 
+
 ##  Prep the training data for input into glmnet
 x = model.matrix(I(price/sqft) ~ DBN + bedrooms + baths + 
-                  borough, data = train)
+                  borough + maintenance_fee, data = train)
 y = train$price/train$sqft
 
 ## Prep the testing data for input into glmnet
-xT = model.matrix(I(price/sqft) ~ DBN + bedrooms + baths + borough, data = test)
+xT = model.matrix(I(price/sqft) ~ DBN + bedrooms + baths + borough + maintenance_fee, data = test)
 yT = test$price/test$sqft
 
 ## Run the actual glmnet function to get a model
@@ -60,7 +64,7 @@ pred <- cbind(cvpred, y)
 cor(cvpred, y)
 
 # Graph the actual vals vs predictions for training set
-ggplot(data = filter(pred, X1 <= 10000, y <= 5000), aes(x = X1, y = y)) + 
+ggplot(data = pred, aes(x = X1, y = y)) + 
   geom_point()+
   geom_abline(data = pred,  stat = "abline", position = "identity", show_guide = FALSE)+
   xlab('Predicted Price Per Sq Ft') + 
@@ -82,8 +86,9 @@ cor(cvpred, yT)
 ## Set the predictions and actuals values next to each other for the test set
 pred <- cbind(cvpred, yT)
 
+
 ## Plot Actual Price vs Predicted Price for test data
-ggplot(data = filter(pred2, yT <= 5000), aes(x = X1, y = yT)) + 
+ggplot(data = pred, aes(x = X1, y = yT)) + 
   geom_point()+
   geom_abline(data = pred,  stat = "abline", position = "identity", show_guide = FALSE)+
   xlab('Predicted Price Per Sq Ft') + 
@@ -101,7 +106,7 @@ quantile(df$price, seq(0,1,by=0.01))
 mean((cvpred - yT)^2)/nrow(test)
 
 ## Get the actual average mean squared error
-mean((cvpred - yT)^2)
+sqrt(mean((cvpred - yT)^2))
 
 
 #################################################################
@@ -111,7 +116,6 @@ mean((cvpred - yT)^2)
 # Make a data frame with only relevant columns
 testWPred <- cbind(test, pred)
 testWPred <- testWPred[ , c("DBN", "bedrooms", "price_per_sqft", "X1")]
-View(testWPred)
 
 # Order the data for readable plotting
 plot_data <- testWPred %>%
@@ -176,11 +180,8 @@ ggplot(data = filter(plot_data, bedrooms >= 0), aes(x = DBN, y = X1, color = as.
 # Fake data to test change in price by bedrooms for all boroughs at once  #
 ###########################################################################
 
-## Temporary variable to work on for this plot
-fakeTrainOrig <- df
-
-#### To avoid that occur in expand.data, we'll instead prep fake data differently ####
-  # Essentially, when using expand.data, there's no way to tell which of the original
+#### To avoid that occur in expand.grid, we'll instead prep fake data differently ####
+  # Essentially, when using expand.grid, there's no way to tell which of the original
   # data points were in which borough, as it's declared in order rather than
   # by the actual borough. This skewed the data depending on chance rather than reality.
   # By prepping the data this way, we make sure that the borough for a given row
@@ -193,23 +194,28 @@ fakeTest <- df %>% group_by(DBN, borough) %>% summarize(baths = mean(baths))
 ## Declare dummy variable equal to the real value we want, which is
 # the avg number of bathrooms over all data
 fakeTest$baths = mean(df$baths)
+fakeTest$baths = NULL
 
 ## Create a new vector to vary over bedroom count
 beds <- data.frame(bedrooms = c(0, 1, 2, 3))
-
+bath <- data.frame(baths = c(1,2))
 ## Add dummy vectors for price and sqft, as glmnet forces us to make the fields
   ## the same in the model and the data to predict on to run properly
 price <- data.frame(price = 1)
 sqft <- data.frame(sqft = 1)
+schoolFeatures <- unique(df[ , c(df$`% Poverty`, df$`% Asian`, df$`% Black`, df$`% White`, df$`% Hispanic`)])
 
 ## Merge all vectors to create the final fake data frame
 fakeTest <- merge(fakeTest, beds, all = T)
+fakeTest <- merge(fakeTest, bath, all = T)
 fakeTest <- merge(fakeTest, price, all = T)
 fakeTest <- merge(fakeTest, sqft, all = T)
+fakeTest <- merge(fakeTest, schoolFeatures, all = T)
+
 
 ##  Prep the training data for input into glmnet, but only for Manhattan for some testing
-x = model.matrix(I(price/sqft) ~ DBN + bedrooms + baths + borough, data = fakeTrainOrig)
-y = fakeTrainOrig$price/fakeTrainOrig$sqft
+x = model.matrix(I(price/sqft) ~ DBN + bedrooms + baths + borough + `% Poverty` + `% Asian` + `% Black` + `% White` + `% Hispanic`, data = df)
+y = df$price/df$sqft
 
 ## Run the actual glmnet function to get a model
 cvfit = cv.glmnet (x, y)
@@ -235,7 +241,7 @@ ggplot(data = filter(plot_data, bedrooms >= 0), aes(x = DBN, y = X1, color = as.
   geom_point()+xlab('DBN') + 
   ylab('Prediction') + 
   ggtitle('Stratification of bedrooms by DBN') +
-  facet_wrap(~ borough) +
+  facet_grid(. ~ borough) +
   theme(legend.title = element_blank(),
         axis.text.x = element_text(angle = 80, hjust = 1),
         legend.background = element_rect(fill = "transparent"))

@@ -153,7 +153,7 @@ ggplot(data = filter(plot_data, bedrooms >= 0), aes(x = DBN, y = X1, color = as.
 # the borough properly.
 
 ## Grab necessary fields and summarize on a dummy variable, then get rid of dummy
-fakeTest <- df %>% group_by(DBN, borough, meanScores, `% Poverty`, `% White`, `% Hispanic`,`% Asian`, neighborhood) %>% summarize(bathrooms = mean(baths))
+fakeTest <- df %>% group_by(DBN, borough, meanScores, neighborhood, `% Poverty`, `% White`, `% Hispanic`,`% Asian`) %>% summarize(bathrooms = mean(baths))
 fakeTest$bathrooms = NULL
 
 ## Create a new vector to vary over bedroom count
@@ -167,27 +167,14 @@ sqft <- data.frame(sqft = 1)
 
 ## Merge all vectors to create the final fake data frame
 fakeTest <- merge(fakeTest, beds, all = T)
-fakeTest <- merge(fakeTest, baths, all = T)
 fakeTest <- merge(fakeTest, price, all = T)
 fakeTest <- merge(fakeTest, sqft, all = T)
 fakeTest <- merge(fakeTest, baths, all = T)
 
-## Filter out bad configurations of beds and baths.
-  # If chosen we can do this in the plot itself and calculate.
-fakeTest <- filter(fakeTest, 
-              (bedrooms == 0 & baths == 1) | 
-              (bedrooms == 1 & baths == 1) | 
-              (bedrooms == 2 & baths == 1) |  
-              (bedrooms == 3 & baths == 1) |
-              (bedrooms == 2 & baths == 1.5) |
-              (bedrooms == 3 & baths == 1.5) |
-              (bedrooms == 2 & baths == 2) |
-              (bedrooms == 3 & baths == 2))
-
 
 ##  Prep the training data for input into glmnet
 x = model.matrix(I(price/sqft) ~ baths + meanScores  + `% Poverty` + `% White` + `% Hispanic` 
-                 + `% Asian` + neighborhood + (bedrooms*DBN), data = df)
+                 + `% Asian` + (bedrooms*DBN) + neighborhood, data = df)
 y = df$price/df$sqft
 
 
@@ -196,7 +183,7 @@ cvfit = cv.glmnet (x, y)
 
 ## Make a matrix of the data to predict on
 xF = model.matrix(I(price/sqft) ~ baths + meanScores  + `% Poverty` + `% White` + `% Hispanic` 
-                  + `% Asian` + neighborhood + (bedrooms*DBN), data = fakeTest)
+                  + `% Asian` + (bedrooms*DBN) + neighborhood, data = fakeTest)
 
 ## Predict on the fake data with the lambda minimized
 fakeDataPred <- predict(cvfit, newx = xF, s = "lambda.min")
@@ -211,18 +198,111 @@ testWPred <- cbind(fakeTest, fakeDataPred)
 plot_data <- testWPred %>%
   mutate(DBN = reorder(DBN, X1))
 
+save(plot_data, file = "plotDataWNeighborhoods.RData")
+
+
+###########################
+# W/o School Data
+###########################
+
+##  Prep the training data for input into glmnet w/o school data
+x = model.matrix(I(price/sqft) ~ baths + (bedrooms*DBN) + neighborhood, data = df)
+y = df$price/df$sqft
+
+## Run the actual glmnet function to get a model
+cvfit = cv.glmnet (x, y)
+
+## Make a matrix of the data to predict on w/o school data
+xF = model.matrix(I(price/sqft) ~ baths + (bedrooms*DBN) + neighborhood, data = fakeTest)
+
+## Predict on the fake data with the lambda minimized
+fakeDataPred <- predict(cvfit, newx = xF, s = "lambda.min")
+
+## Change predictions to easy view
+fakeDataPred <- data.frame(fakeDataPred)
+
+## Bind the fake testing data to the predictions for comparison for plotting
+testWPred <- cbind(fakeTest, fakeDataPred)
+
+## Order the data for readable plotting
+plot_data_wo_schools <- testWPred %>%
+  mutate(DBN = reorder(DBN, X1))
+
+save(plot_data, plot_data_wo_schools, file = "dataForPlottingInMap.RData")
+
+## Filter out bad configurations of beds and baths.
+# If chosen we can do this in the plot itself and calculate.
+plot_data <- filter(testWPred, 
+                    (bedrooms == 0 & baths == 1) | 
+                      (bedrooms == 1 & baths == 1) | 
+                      (bedrooms == 2 & baths == 1.5) |
+                      (bedrooms == 3 & baths == 2))
+
+plot_data <- plot_data %>%
+  mutate(DBN = reorder(DBN, X1))
 ## Plot the stratification of bedrooms by separated by borough
-ggplot(data = plot_data, aes(x = DBN, y = X1, color = as.factor(bedrooms + baths))) + 
+ggplot(data = plot_data, aes(x = DBN, y = X1, color = as.factor(bedrooms))) + 
   geom_point()+xlab('DBN') + 
   ylab('Prediction') + 
   ggtitle('Stratification of bedrooms by DBN') +
-  facet_grid(. ~ borough) +
+  #facet_grid(. ~ borough) +
   theme(legend.title = element_blank(),
         axis.text.x = element_text(angle = 80, hjust = 1),
         legend.background = element_rect(fill = "transparent"))
 
 # Plot stratification by DBN separated by bathroom amount
 ggplot(data = plot_data, aes(x = DBN, y = X1, color = as.factor(bedrooms))) + 
+  geom_point()+xlab('DBN') + 
+  ylab('Prediction') + 
+  ggtitle('Stratification of bedrooms by DBN') +
+  facet_grid(. ~ baths) +
+  theme(legend.title = element_blank(),
+        axis.text.x = element_text(angle = 80, hjust = 1),
+        legend.background = element_rect(fill = "transparent"))
+
+p2 <- filter(p, X1 >= 1000)
+View(p2)
+
+
+plot_data_wo_schools <- filter(testWPred, 
+                    (bedrooms == 0 & baths == 1) | 
+                      (bedrooms == 1 & baths == 1) | 
+                      (bedrooms == 2 & baths == 1.5) |
+                      (bedrooms == 3 & baths == 2))
+
+plot_data_wo_schools <- plot_data_wo_schools %>%
+  mutate(DBN = reorder(DBN, X1))
+
+comparison <- cbind(plot_data$X1, plot_data_wo_schools$X1)
+View(comparison)
+pD <- plot_data[ , 0:11]
+View(pD)
+pD <- cbind(pD, comparison)
+
+ggplot(data = pD, aes(x = `1`, y = `2`, color = as.factor(bedrooms))) + 
+  geom_point()+xlab('Prediction with School Data') + 
+  ylab('Prediction w/o School Data') + 
+  ggtitle('Stratification of bedrooms by DBN') +
+  #facet_grid(. ~ borough) +
+  theme(legend.title = element_blank(),
+        axis.text.x = element_text(angle = 80, hjust = 1),
+        legend.background = element_rect(fill = "transparent"))
+
+
+
+
+## Plot the stratification of bedrooms by separated by borough
+ggplot(data = plot_data_wo_schools, aes(x = DBN, y = X1, color = as.factor(bedrooms))) + 
+  geom_point()+xlab('DBN') + 
+  ylab('Prediction') + 
+  ggtitle('Stratification of bedrooms by DBN') +
+  #facet_grid(. ~ borough) +
+  theme(legend.title = element_blank(),
+        axis.text.x = element_text(angle = 80, hjust = 1),
+        legend.background = element_rect(fill = "transparent"))
+
+# Plot stratification by DBN separated by bathroom amount
+ggplot(data = plot_data_wo_schools, aes(x = DBN, y = X1, color = as.factor(bedrooms))) + 
   geom_point()+xlab('DBN') + 
   ylab('Prediction') + 
   ggtitle('Stratification of bedrooms by DBN') +
