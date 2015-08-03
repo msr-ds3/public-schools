@@ -62,6 +62,6 @@ nyc_school_map <- ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, group=group, 
                                                 size=.2, color="black", 
                                                 data=elementary_ps3, alpha=.8) +
   scale_fill_continuous(low="red", high="blue", guide = guide_legend(title = "Percentile")) +
-  facet_wrap(~ subject, ncol=2)
+  facet_wrap(~ subject, ncol=2) + ggtitle("English vs Math Test Scores")
 #show map
 nyc_school_map
