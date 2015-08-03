@@ -239,8 +239,7 @@ schools_zone_sales <- inner_join(schooldata, complete_listings, by = "DBN")
 schools_zone_sales$DBN <- as.factor(schools_zone_sales$DBN)
 
 # Remove unnecessary data frames
-rm(demographics, df, schooldirectory, schooltarget, city, english, math, env_levels, 
-  classes, tmp, matched_school_zones)
+rm(demographics, df, schooldirectory, schooltarget, city, english, math, env_levels, tmp, matched_school_zones)
 
 # SAVE THE FILES
   # sold_listings is the geocoded selling data, with NA lat/long values removed
