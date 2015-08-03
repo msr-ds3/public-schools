@@ -50,8 +50,8 @@ qplot(factor(`Environment Rating`), data=schooldata, geom="bar") + facet_wrap(~ 
 plot(schooldata$`Environment Rating`, schooldata$`Achievement Rating`)
 
 #Park Slope Comparison
-
-parkslope <- filter(schooldata, Zip == c(11217, 11215))
+# Amit: %in%  is a better operator to use here. Compares for each column.
+parkslope <- filter(schooldata, Zip %in% c(11217, 11215))
 qplot(factor(`Environment Rating`), data=parkslope, fill=factor(`Zip`))
 
 #Achievement by school type
@@ -65,8 +65,8 @@ environments <- data.frame(Cardinal_Environment=as.numeric(factor(schooldata$`En
 attach_toSchool_data <- cbind(schooldata, environments)
 
 #group by geographical zip code to find the mean of environment and achievement
-environment_achievement<-aggregate(attach_toSchool_data[, 60:61], 
-                                    list(attach_toSchool_data$Geographical.District.Code), mean)
+environment_achievement<-aggregate(attach_toSchool_data[, c("Cardinal_Environment", "Cardinal_Achievement")], 
+                                    list(attach_toSchool_data$Geographical.District.Code), mean) # TODO district.code does not exist
 
 #plotting Achievement vs Environment
 ggplot(environment_achievement, aes(x=Cardinal_Environment, y=Cardinal_Achievement, 
@@ -76,3 +76,4 @@ ggplot(environment_achievement, aes(x=Cardinal_Environment, y=Cardinal_Achieveme
   xlab("Environment Rating") +
   ylab("Achievement Rating") +
   ggtitle("Achievement vs Environment rating by geo zip")
+
