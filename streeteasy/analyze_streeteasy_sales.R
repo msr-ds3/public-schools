@@ -8,7 +8,7 @@ library(dplyr)
 library(ggplot2)
 
 ##### Load Listings for Manhattan
-load("streeteasy_sales.RData")
+load('../complete_data.RData')
 
 ############################################################################################
 ##                           Plotting The NYC Sold Listing Data                           ##
