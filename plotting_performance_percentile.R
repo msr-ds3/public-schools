@@ -99,12 +99,14 @@ ggplot(scores, aes(avg_english, fill = part, color = part)) + geom_density(alpha
 ggplot(scores, aes(avg_math, fill = part, color = part)) + geom_density(alpha = 0.4) + theme_bw()
 
 #Plotting School Performance (Statewide Percentile)
+nycscores <- nycscores %>% mutate(COUNTY_NAME = factor(COUNTY_NAME, c("BRONX", "STATEN ISLAND", "QUEENS", "BROOKLYN", "MANHATTAN")))
 
 plotpercentile <- ggplot(nycscores, aes(percentile_all)) + geom_histogram(binwidth = 0.1) + 
   theme_bw() + facet_wrap(~ COUNTY_NAME, nrow = 1) + 
   scale_x_continuous("\nSchool Performance (Statewide Percentile)", label = percent, limits = c(0,1)) + 
   scale_y_continuous("Number of Schools\n") + theme(panel.margin = unit(1, "lines"))
-ggsave(plot = plotpercentile, file = "figures/plotpercentile.pdf", width = 10, height = 6)
+ggsave(plot = plotpercentile, file = "figures/plotpercentile.pdf", width = 10, height = 4)
+ggsave(plot = plotpercentile, file = "figures/plotpercentile.png", width = 10, height = 4)
 
 ############
 
@@ -113,6 +115,7 @@ plotting <- schools_zone_sales %>% group_by(DBN) %>% summarize(avg_sqft = mean(p
 schooldata$percentile <- rank(schooldata$`Mean Scale Score Math`)/length(schooldata$`Mean Scale Score Math`)
 schooldatareduce <- schooldata %>% select(DBN, percentile, City)
 plotting <- merge(plotting, schooldatareduce, by = "DBN")
+plotting <- plotting %>% mutate(City = factor(City, c("BRONX", "STATEN ISLAND","QUEENS", "BROOKLYN", "MANHATTAN")))
 rm(schooldatareduce)
 
 #Plotting Percentile vs Avg Price per Square Foot Per School
@@ -120,4 +123,5 @@ percentile <- ggplot(plotting, aes(x = percentile, y = avg_sqft)) +
   geom_point() +  geom_smooth(method=loess, color = "red")  + facet_wrap(~ City, nrow = 1) + theme_bw() + 
   scale_x_continuous("\nSchool Performance (Statewide Percentile)", label = percent, limits = c(0,1)) + 
   scale_y_continuous("Average Price Per Square Foot\n", label = dollar) + theme(panel.margin = unit(1, "lines"))
-ggsave(plot = percentile, file = "figures/plotpercentilesqft.pdf", width = 10, height = 6)
+ggsave(plot = percentile, file = "figures/plotpercentilesqft.pdf", width = 10, height = 4)
+ggsave(plot = percentile, file = "figures/plotpercentilesqft.png", width = 10, height = 4)
