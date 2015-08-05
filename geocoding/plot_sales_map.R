@@ -79,17 +79,22 @@ ggsave(parkSlopePremiumMap, file = "../figures/parkSlopePremiumMap.pdf", width =
 ggsave(parkSlopePremiumMap, file = "../figures/parkSlopePremiumMap.png", width = 5, height = 5)
 
 
-## For 2 BR 2 Bath
-premiums2Bed2Baths <- ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, group=group, fill = binPremium), 
-                                            size=.2, color="black", 
-                                            data = filter(predC, bedrooms == 2 & baths == 2), alpha=.8) + 
-  ggtitle("Premiums on 2Bed/2Bath Apts for Each School Zone\n") +
-  scale_fill_brewer(palette = "RdBu") + guides(fill = guide_legend(title = "Premium")) +
+## Predicted Price for 2 BR 2 Bath
+prices <- mutate(predB, binPrice = cut(X1, 
+                                        labels = c('> $500', '$500 - $1000', '$1000 - $1500', '> $1500'), 
+                                        breaks = c(min(X1), 500, 1000, 1500, max(X1))))
+
+price2Bed2Baths <- ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, group=group, fill = binPrice), 
+                                                 size=.2, color="black", 
+                                                 data = filter(prices, bedrooms == 2 & baths == 2), alpha=.8) + 
+  ggtitle("Predicted Price of 2BR/2BR Apts by District\n") + 
+  scale_fill_brewer(palette = "RdBu") + guides(fill = guide_legend(title = "Price Per Square Ft")) +
   xlab('') + ylab('') + 
   theme(axis.ticks = element_blank(), axis.text.x=element_blank(), axis.text.y = element_blank(),
         legend.position = c(.2, .8))
-ggsave(premiums2Bed2Baths, file = "../figures/premiums2Bed2Baths.pdf", width = 5, height = 5)
-ggsave(premiums2Bed2Baths, file = "../figures/premiums2Bed2Baths.png", width = 5, height = 5)
+ggsave(price2Bed2Baths, file = "../figures/price2Bed2Baths.pdf", width = 5, height = 5)
+ggsave(price2Bed2Baths, file = "../figures/price2Bed2Baths.png", width = 5, height = 5)
+
 
 #####################################################
 # Plot polygons for school zones over the base map
@@ -125,8 +130,8 @@ ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, group=group, fill = X1),
 # 2 BR
 ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, group=group, fill = X1), 
                               size=.2, color="black", 
-                              data = filter(fakeSalesB, bedrooms == 2), alpha=.8) + 
-  ggtitle("Predicted Price Per Sqft of 2BRs by district") + 
+                              data = filter(fakeSalesB, bedrooms == 2, baths == 2), alpha=.8) + 
+  ggtitle("Predicted Price of 2BR/2BR Apts by District") + 
   scale_colour_brewer("clarity")  +
   scale_x_continuous(limits = c(-74.05, -73.8))
 
