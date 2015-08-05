@@ -40,7 +40,7 @@ nyc_school_map_test <- ggmap(NY_map) + geom_polygon(aes(x=long, y=lat, group=gro
                                                     size=.2, color="black", 
                                                     data=elementary_ps, alpha=.8) + 
                                                     scale_fill_brewer(palette = "RdBu", 
-                                                    guide = guide_legend(title = "School Performance", reverse = TRUE, legend.position = c(.2, .8))) +
+                                                    guide = guide_legend(title = "School Performance", reverse = TRUE)) +
                                                     xlab("") +ylab("") + 
                                                     theme(axis.ticks = element_blank(), axis.text.x=element_blank(), axis.text.y = element_blank(),
                                                     legend.position = c(.2, .8))+
