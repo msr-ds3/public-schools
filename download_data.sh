@@ -76,3 +76,18 @@ wget -O nyc_school_shapefiles_2014.zip https://data.cityofnewyork.us/api/geospat
 
 unzip nyc_school_shapefiles_2014.zip
 
+cd ..
+
+### Downloading State Percentile Data
+
+cd schools
+
+wget http://www.p12.nysed.gov/irs/ela-math/2014/201314-gr38-ELAandMath-Unmatched.xls
+
+mv 201314-gr38-ELAandMath-Unmatched.xls testscores.xls
+
+cd ..
+
+###Creating Figures Folder
+
+mkdir figures
