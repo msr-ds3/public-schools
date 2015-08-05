@@ -7,6 +7,7 @@ library(ggplot2)
 library(dplyr)
 library(locfit)
 library(glmnet)
+library(scales)
 
 ## Load the data for modeling
 load('../complete_data.RData')
@@ -20,7 +21,7 @@ df <- schools_zone_sales
 ## Declare DBNs as factors and drop any unused factors
 df$DBN <- as.factor(df$DBN)
 df <- mutate(df, DBN = droplevels(DBN))
-
+df <- df[df$price < 2.5e6, ]
 ## Set random seed for splitting into training and test data
 set.seed(808)
 
@@ -72,15 +73,13 @@ median(abs(cvpred$X1 - y))
 
 
 ## Graph the actual vals vs predictions for training set
-ggplot(data = pred, aes(x = X1, y = y)) + 
-  geom_point()+
-  geom_abline(data = pred,  stat = "abline", position = "identity", show_guide = FALSE)+
-  xlab('Predicted Price Per Sq Ft') + 
-  ylab('True Price Per Sq Ft') +
-  ggtitle('Actual Price Per Sq Ft vs Predicted Price Per Sq Ft For Training Data') +
-  theme(legend.title=element_blank(),
-        axis.text.x=element_text(angle=80, hjust=1),
-        legend.background = element_rect(fill = "transparent"))
+actualVsPredictedTrain <- ggplot(data = pred, aes(x = X1, y = y)) + 
+  geom_point(alpha = .3, size = .75)+
+  geom_abline(intercept=0, slope=1, linetype = 'dashed')+
+  scale_x_continuous('\nPredicted Price Per Sq Ft', limits = c(0, 2500), label = dollar) + 
+  scale_y_continuous('Actual Price Per Sq Ft\n', limits = c(0, 2500), label = dollar) +
+  ggtitle('Actual vs Predicted Price\n') +
+  theme_bw()
 
 
 ######################
@@ -93,8 +92,10 @@ cvpred <- predict(cvfit, newx = xT, s = "lambda.min")
 cvpred <- data.frame(cvpred)
 ## Get correlation between the predictions and the actual values for test set
 cor(cvpred, yT)
+
 ## Set the predictions and actuals values next to each other for the test set
 pred <- cbind(cvpred, yT)
+pred <- cbind(test, pred)
 
 ## Get the sqrt(Mean Squared Error) for testing data
 sqrt(mean((cvpred$X1 - yT)^2))
@@ -102,16 +103,23 @@ sqrt(mean((cvpred$X1 - yT)^2))
 ## Get the median of the absolute error for testing data
 median(abs(cvpred$X1 - yT))
 
-## Plot Actual Price vs Predicted Price for test data
-ggplot(data = pred, aes(x = X1, y = yT)) + 
-  geom_point()+
-  geom_abline(data = pred,  stat = "abline", position = "identity", show_guide = FALSE)+
-  xlab('Predicted Price Per Sq Ft') + 
-  ylab('True Price Per Sq Ft') +
-  ggtitle('Actual Price Per Sq Ft vs Predicted Price Per Sq Ft For Test Data') +
-  theme(legend.title=element_blank(),
-        axis.text.x=element_text(angle=80, hjust=1),
-        legend.background = element_rect(fill = "transparent"))
+## Get the median absolute error and median relative error by borough
+pred$absDev <- abs(pred$X1 - pred$yT)
+
+## Set MAE and MRE on a table
+pred2 <- pred %>% group_by(borough) %>% summarize(medAbsDev = median(absDev), medRelDev = median(absDev)/median(yT))
+
+## Actual Vs Predicted Price for Test Data
+actualVsPredicted <- ggplot(data = pred, aes(x = X1, y = yT)) + 
+  geom_point(alpha = .3, size = .75)+
+  geom_abline(intercept=0, slope=1, linetype = 'dashed')+
+  scale_x_continuous('\nPredicted Price Per Sq Ft', limits = c(0, 2500), label = dollar) + 
+  scale_y_continuous('Actual Price Per Sq Ft\n', limits = c(0, 2500), label = dollar) +
+  ggtitle('Actual vs Predicted Price\n') +
+  theme_bw()
+
+ggsave(actualVsPredicted, file = "../figures/actualVsPredicted.pdf", width = 5, height = 5)
+ggsave(actualVsPredicted, file = "../figures/actualVsPredicted.png", width = 5, height = 5)
 
 
 #################################################################
@@ -177,8 +185,6 @@ fakeTest <- merge(fakeTest, price, all = T)
 fakeTest <- merge(fakeTest, sqft, all = T)
 fakeTest <- merge(fakeTest, baths, all = T)
 
-## Limit data to just those with 2.5M or lower price
-df <- df[df$price < 2.5e6, ]
 
 ##  Prep the training data for input into glmnet
 x = model.matrix(I(price/sqft) ~ baths + meanScores  + `% Poverty` + `% White` + `% Hispanic` 
@@ -195,100 +201,49 @@ xF = model.matrix(I(price/sqft) ~ baths + meanScores  + `% Poverty` + `% White` 
 ## Predict on the fake data with the lambda minimized
 fakeDataPred <- predict(cvfit, newx = xF, s = "lambda.min")
 
+## Remove unnecessary dfs
+m(baths, beds, price, sqft, sold_listings, complete_listings, schooldata)
+
 ## Change predictions to easy view
 fakeDataPred <- data.frame(fakeDataPred)
 
 ## Bind the fake testing data to the predictions for comparison for plotting
 testWPred <- cbind(fakeTest, fakeDataPred)
 
-## Get only the relevant data needed to make the premiums
-fakeDataWPremiums <- testWPred %>% group_by(neighborhood, borough, bedrooms, baths) %>% summarize(mean(X1))
+## Get only the relevant data needed to make the premiums, summarize on avg
+fakeDataWPremiums <- testWPred %>% group_by(neighborhood, borough, bedrooms, baths) %>% summarize(meanPrediction = mean(X1))
 
 ## Join the premiums to the full fake data set
 fakeDataWPremiums <- inner_join(testWPred, fakeDataWPremiums)
 
 ## Add a premium column with the predictions minus the average in that area
-fakeDataWPremiums$premium <- fakeDataWPremiums$X1 - fakeDataWPremiums$`mean(X1)`
+fakeDataWPremiums$premium <- fakeDataWPremiums$X1 - fakeDataWPremiums$meanPrediction
+View(fakeDataWPremiums)
 
 ## Save for plotting
 save(fakeDataWPremiums, file = "fakeDataWPremiums.RData")
 
-##########################################################################
-#################### MAY NO LONGER BE NECESSARY ##########################
-##########################################################################
 
-## Order the data for readable plotting
-plot_data <- testWPred %>%
-  mutate(DBN = reorder(DBN, X1))
-
-## Save this plotting data for plot_sales_map.R
-save(plot_data, file = "plotDataWNeighborhoods.RData")
-
-
-###########################
-# W/o School Data
-###########################
-
-##  Prep the training data for input into glmnet w/o school data
-x2 = model.matrix(I(price/sqft) ~ baths + bedrooms + neighborhood, data = df)
-y2 = df$price/df$sqft
-
-## Run the actual glmnet function to get a model
-cvfit2 = cv.glmnet (x2, y2)
-
-## Make a matrix of the data to predict on w/o school data
-xF2 = model.matrix(I(price/sqft) ~ baths + bedrooms + neighborhood, data = fakeTest)
-
-## Predict on the fake data with the lambda minimized
-fakeDataPred2 <- predict(cvfit2, newx = xF2, s = "lambda.min")
-
-## Change predictions to easy view
-fakeDataPred2 <- data.frame(fakeDataPred2)
-
-## Bind the fake testing data to the predictions for comparison for plotting
-testWPred2 <- cbind(fakeTest, fakeDataPred2)
-
-
-######################################################
-#     Check Data w/Schools vs Data w/o Schools       #
-######################################################
-
-#################### FIND DIFFERENCE #####################
-
-## Stick both sets of a predictions into 1 file
-allPreds <- cbind(fakeTest, fakeDataPred)
-allPreds <- cbind(allPreds, fakeDataPred2)
-
-WithSchoolDataMinusWO <- fakeDataPred$X1 - fakeDataPred2$X1
-allPreds <- cbind(allPreds, WithSchoolDataMinusWO)
-save(allPreds, file = "plotData.RData")
-View(allPreds)
-
-pSPreds <- allPreds[allPreds$neighborhood == "Park Slope", ]
-View(pSPreds)
-
-pSPreds <- allPreds[allPreds$neighborhood == "Upper West Side", ]
-View(pSPreds)
-
-
-#######################
-#      GGPLOTS        #
-#######################
-
-## Order the data for readable plotting
-plot_data_wo_schools <- testWPred2 %>%
-  mutate(DBN = reorder(DBN, X1))
+####################################################
+#  For GGplots with Stratification by Bedroom Amt  #
+####################################################
 
 ## Filter out bad configurations of beds and baths.
 # If chosen we can do this in the plot itself and calculate.
+
 plot_data <- filter(testWPred, 
                     (bedrooms == 0 & baths == 1) | 
                       (bedrooms == 1 & baths == 1) | 
                       (bedrooms == 2 & baths == 1.5) |
                       (bedrooms == 3 & baths == 2))
 
+## Reorder the data for nice plotting
 plot_data <- plot_data %>%
   mutate(DBN = reorder(DBN, X1))
+
+## Save this plotting data for plot_sales_map.R
+save(plot_data, file = "plotData.RData")
+
 ## Plot the stratification of bedrooms by separated by borough
 ggplot(data = plot_data, aes(x = DBN, y = X1, color = as.factor(bedrooms))) + 
   geom_point()+xlab('DBN') + 
@@ -309,53 +264,3 @@ ggplot(data = plot_data, aes(x = DBN, y = X1, color = as.factor(bedrooms))) +
         axis.text.x = element_text(angle = 80, hjust = 1),
         legend.background = element_rect(fill = "transparent"))
 
-p2 <- filter(p, X1 >= 1000)
-View(p2)
-
-
-plot_data_wo_schools <- filter(testWPred, 
-                    (bedrooms == 0 & baths == 1) | 
-                      (bedrooms == 1 & baths == 1) | 
-                      (bedrooms == 2 & baths == 1.5) |
-                      (bedrooms == 3 & baths == 2))
-
-plot_data_wo_schools <- plot_data_wo_schools %>%
-  mutate(DBN = reorder(DBN, X1))
-
-comparison <- cbind(plot_data$X1, plot_data_wo_schools$X1)
-View(comparison)
-pD <- plot_data[ , 0:11]
-View(pD)
-pD <- cbind(pD, comparison)
-
-ggplot(data = pD, aes(x = `1`, y = `2`, color = as.factor(bedrooms))) + 
-  geom_point()+xlab('Prediction with School Data') + 
-  ylab('Prediction w/o School Data') + 
-  ggtitle('Stratification of bedrooms by DBN') +
-  #facet_grid(. ~ borough) +
-  theme(legend.title = element_blank(),
-        axis.text.x = element_text(angle = 80, hjust = 1),
-        legend.background = element_rect(fill = "transparent"))
-
-
-
-
-## Plot the stratification of bedrooms by separated by borough
-ggplot(data = plot_data_wo_schools, aes(x = DBN, y = X1, color = as.factor(bedrooms))) + 
-  geom_point()+xlab('DBN') + 
-  ylab('Prediction') + 
-  ggtitle('Stratification of bedrooms by DBN') +
-  #facet_grid(. ~ borough) +
-  theme(legend.title = element_blank(),
-        axis.text.x = element_text(angle = 80, hjust = 1),
-        legend.background = element_rect(fill = "transparent"))
-
-# Plot stratification by DBN separated by bathroom amount
-ggplot(data = plot_data_wo_schools, aes(x = DBN, y = X1, color = as.factor(bedrooms))) + 
-  geom_point()+xlab('DBN') + 
-  ylab('Prediction') + 
-  ggtitle('Stratification of bedrooms by DBN') +
-  facet_grid(. ~ baths) +
-  theme(legend.title = element_blank(),
-        axis.text.x = element_text(angle = 80, hjust = 1),
-        legend.background = element_rect(fill = "transparent"))

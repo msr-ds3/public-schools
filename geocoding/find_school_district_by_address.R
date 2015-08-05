@@ -5,7 +5,7 @@ library(ggplot2)
 library(stringr)
 
 
-create_city_basemap <- function(cityname, long=NULL, lat=NULL) {
+create_city_basemap <- function(cityname, long=NULL, lat=NULL, zoom = 11) {
   # Creates a map of a location
   if (!is.null(long)){
     centre_map = data.frame(lon=c(long), lat=c(lat))
@@ -14,7 +14,7 @@ create_city_basemap <- function(cityname, long=NULL, lat=NULL) {
     centre_map <- geocode(cityname)
   }
   
-  city_mapdata <- get_map(c(lon=centre_map$lon, lat=centre_map$lat),zoom = 12, maptype = "terrain", source = "google")
+  city_mapdata <- get_map(c(lon=centre_map$lon, lat=centre_map$lat), zoom = zoom, maptype = "terrain", source = "google")
   return(city_mapdata)
 }
 
@@ -37,7 +37,7 @@ get_addresses <- function(filename){
 }
 
 Main <- function() {
-  filepath <- "2013_2014_School_Zones_8May2013"
+  # filepath <- "2013_2014_School_Zones_8May2013"
   shapefile <- "ES_Zones_2013-2014"
   input_addresses_file <- "street_addresses.csv"
 
