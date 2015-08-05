@@ -34,7 +34,6 @@ test <- df[-ndx, ]
 #            Original Plotting with pure data          #
 ########################################################
 
-
 ##########################
 #### ON TRAINING DATA ####
 ##########################
@@ -143,6 +142,14 @@ ggplot(data = filter(plot_data, bedrooms >= 0), aes(x = DBN, y = X1, color = as.
 # Modeling on Fake Data With School Stuff #
 ###########################################
 
+# For each config, get how many sales were in the original data.
+  # Filter only the configs in the fake data
+# boo <- filter(df, bedrooms == 0 | bedrooms == 1 | bedrooms == 2 | bedrooms == 3)
+# boo <- filter(boo, baths == 1 | baths == 1.5 | baths == 2)
+  # Group them and count
+# b <- boo %>% group_by(DBN, borough, meanScores, neighborhood, `% Poverty`, `% White`, `% Hispanic`,`% Asian`, bedrooms, baths) %>% summarize(num = n())
+# View(b)
+
 #### To avoid that occur in expand.grid, we'll instead prep fake data differently ####
 # Essentially, when using expand.grid, there's no way to tell which of the original
 # data points were in which borough, as it's declared in order rather than
@@ -170,19 +177,20 @@ fakeTest <- merge(fakeTest, price, all = T)
 fakeTest <- merge(fakeTest, sqft, all = T)
 fakeTest <- merge(fakeTest, baths, all = T)
 
+## Limit data to just those with 2.5M or lower price
+df <- df[df$price < 2.5e6, ]
 
 ##  Prep the training data for input into glmnet
 x = model.matrix(I(price/sqft) ~ baths + meanScores  + `% Poverty` + `% White` + `% Hispanic` 
-                 + `% Asian` + bedrooms + DBN + neighborhood, data = df)
+                 + `% Asian` + (bedrooms*DBN) + neighborhood, data = df)
 y = df$price/df$sqft
-
 
 ## Run the actual glmnet function to get a model
 cvfit = cv.glmnet (x, y)
 
 ## Make a matrix of the data to predict on
 xF = model.matrix(I(price/sqft) ~ baths + meanScores  + `% Poverty` + `% White` + `% Hispanic` 
-                  + `% Asian` + bedrooms + DBN + neighborhood, data = fakeTest)
+                  + `% Asian` + (bedrooms*DBN) + neighborhood, data = fakeTest)
 
 ## Predict on the fake data with the lambda minimized
 fakeDataPred <- predict(cvfit, newx = xF, s = "lambda.min")
@@ -192,6 +200,22 @@ fakeDataPred <- data.frame(fakeDataPred)
 
 ## Bind the fake testing data to the predictions for comparison for plotting
 testWPred <- cbind(fakeTest, fakeDataPred)
+
+## Get only the relevant data needed to make the premiums
+fakeDataWPremiums <- testWPred %>% group_by(neighborhood, borough, bedrooms, baths) %>% summarize(mean(X1))
+
+## Join the premiums to the full fake data set
+fakeDataWPremiums <- inner_join(testWPred, fakeDataWPremiums)
+
+## Add a premium column with the predictions minus the average in that area
+fakeDataWPremiums$premium <- fakeDataWPremiums$X1 - fakeDataWPremiums$`mean(X1)`
+
+## Save for plotting
+save(fakeDataWPremiums, file = "fakeDataWPremiums.RData")
+
+##########################################################################
+#################### MAY NO LONGER BE NECESSARY ##########################
+##########################################################################
 
 ## Order the data for readable plotting
 plot_data <- testWPred %>%
@@ -237,6 +261,7 @@ allPreds <- cbind(allPreds, fakeDataPred2)
 
 WithSchoolDataMinusWO <- fakeDataPred$X1 - fakeDataPred2$X1
 allPreds <- cbind(allPreds, WithSchoolDataMinusWO)
+save(allPreds, file = "plotData.RData")
 View(allPreds)
 
 pSPreds <- allPreds[allPreds$neighborhood == "Park Slope", ]
@@ -245,12 +270,10 @@ View(pSPreds)
 pSPreds <- allPreds[allPreds$neighborhood == "Upper West Side", ]
 View(pSPreds)
 
+
 #######################
 #      GGPLOTS        #
 #######################
-
-
-
 
 ## Order the data for readable plotting
 plot_data_wo_schools <- testWPred2 %>%
