@@ -238,6 +238,10 @@ View(fakeDataWPremiums)
 ## Save for plotting
 save(fakeDataWPremiums, file = "fakeDataWPremiums.RData")
 
+# compare park slope 282 vs 321 example for talk
+filter(fakeDataWPremiums, neighborhood == "Park Slope" & DBN == "13K282" & bedrooms == 2 & baths == 2) %>% select(X1)
+filter(fakeDataWPremiums, neighborhood == "Park Slope" & DBN == "15K321" & bedrooms == 2 & baths == 2) %>% select(X1)
+
 
 ####################################################
 #  For GGplots with Stratification by Bedroom Amt  #
