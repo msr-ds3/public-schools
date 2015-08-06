@@ -15,11 +15,9 @@ filepath <- "2013_2014_School_Zones_8May2013"
 shapefile <- "ES_Zones_2013-2014"
 
 # Load necessary data frames for plotting
+load("../pricePremium.RData")
 load("../complete_data.RData")
-
-# This comes from the model_sales_and_schools file.
 load("../streeteasy/plotData.RData")
-load("../streeteasy/fakeDataWPremiums.RData")
 
 # Get school boundaries from NYC opendata shapefiles
 school_zone_boundaries <- create_school_mapdata(filepath, shapefile)
@@ -31,63 +29,73 @@ school_zone_boundaries@data$id = rownames(school_zone_boundaries@data)
 # Group on what we plan to plot by
 eP <- schools_zone_sales %>% group_by(DBN) %>% summarize(num = n())
 
-# Get school boundaries in each thing
+# Get school boundaries
+predictions <- merge(school_zone_boundaries@data, price_premium, by = "DBN", all.y = TRUE)
+
 boundariesandschools <- merge(school_zone_boundaries@data, eP, by = "DBN", all.y=TRUE)
 stratByBeds <- merge(school_zone_boundaries@data, plot_data, by = "DBN", all.y=TRUE)
-predictions <- merge(school_zone_boundaries@data, fakeDataWPremiums, by = "DBN", all.y = TRUE)
 
 # Inner join to the school data for plotting.
-salesB <- inner_join(schools_df, boundariesandschools)
 predB <- inner_join(schools_df, predictions)
+
+salesB <- inner_join(schools_df, boundariesandschools)
 fakeSalesB <- inner_join(schools_df, stratByBeds)
 
 # Create base map for NYC
 nyc_map <- create_city_basemap("New York, NY")
-park_slope_map <- create_city_basemap("Park Slope, NY", zoom = 14)
+park_slope_map <- create_city_basemap("700 Garfield Street, Park Slope, NY", zoom = 15)
 
 
 ######################################
 # Plots for fake data by the premium #
 ######################################
 
-predC <- mutate(predB, binPremium = cut(premium, 
-                                        labels = c('< -$150', '-$150 - $0', '$0 - $150', '> $150'), 
-                                        breaks = c(min(premium), -150, 0, 150, max(premium))))
+predC <- mutate(predB, binPremium = cut(mean_premium, 
+                                        labels = c('< -$100', '-$100 - $0', '$0 - $100', '> $100'), 
+                                        breaks = c(min(mean_premium), -100, 0, 100, max(mean_premium))))
 
-premiumMap <- ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, group=group, fill = binPremium), 
+
+predD <- mutate(predB, binPremium = cut(mean_premium, 
+                                        labels = c('< -$150', '-$150 - -$100','-$100 - -$50', '-$50 - $0', '$0 - $50', '$50 - $100', '$100 - $150','> $150'), 
+                                        breaks = c(min(mean_premium), -150, -100, -50, 0, 50, 100, 150, max(mean_premium))))
+
+
+premiumMap2 <- ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, group=group, fill = binPremium), 
                               size=.2, color="black", 
                               data = predC, alpha=.8) + 
-  ggtitle("Premium Costs for Each School Zone\n") +
+  ggtitle("Premium Costs for Each School Zone\nBased on Neighboring Zones\n") +
   scale_fill_brewer(palette = "RdBu") + guides(fill = guide_legend(title = "Premium")) +
   xlab('') + ylab('') + 
   theme(axis.ticks = element_blank(), axis.text.x=element_blank(), axis.text.y = element_blank(),
         legend.position = c(.2, .8))
-ggsave(premiumMap, file = "../figures/premiumMap.pdf", width = 5, height = 5)
-ggsave(premiumMap, file = "../figures/premiumMap.png", width = 5, height = 5)
+ggsave(premiumMap2, file = "../figures/premiumMap2.pdf", width = 5, height = 5)
+ggsave(premiumMap2, file = "../figures/premiumMap2.png", width = 5, height = 5)
 
 
 ## Park Slope Map Only
-parkSlopePremiumMap <- ggmap(park_slope_map) + geom_polygon(aes(x=long, y=lat, group=group, fill = binPremium), 
+parkSlopePremiumMap2 <- ggmap(park_slope_map) + geom_polygon(aes(x=long, y=lat, group=group, fill = binPremium), 
                                             size=.2, color="black", 
-                                            data = filter(predC, neighborhood == "Park Slope"), alpha=.8) + 
+                                            data = filter(predC, DBN == '13K282' | DBN == '15K321' |
+                                                          DBN == '15K039') %>% mutate(DBN=droplevels(DBN)), 
+                                            alpha=.8) + 
   ggtitle("Premium Costs for Park Slope School Zones\n") +
   scale_fill_brewer(palette = "RdBu") + guides(fill = guide_legend(title = "Premium")) +
   xlab('') + ylab('') + 
   theme(axis.ticks = element_blank(), axis.text.x=element_blank(), axis.text.y = element_blank(),
-        legend.position = c(.8, .2))
-ggsave(parkSlopePremiumMap, file = "../figures/parkSlopePremiumMap.pdf", width = 5, height = 5)
-ggsave(parkSlopePremiumMap, file = "../figures/parkSlopePremiumMap.png", width = 5, height = 5)
+        legend.position = c(.85, .15))
+ggsave(parkSlopePremiumMap2, file = "../figures/parkSlopePremiumMap2.pdf", width = 5, height = 5)
+ggsave(parkSlopePremiumMap2, file = "../figures/parkSlopePremiumMap2.png", width = 5, height = 5)
 
 
 ## Predicted Price for 2 BR 2 Bath
 prices <- mutate(predB, binPrice = cut(X1, 
-                                        labels = c('> $500', '$500 - $1000', '$1000 - $1500', '> $1500'), 
+                                        labels = c('< $500', '$500 - $1000', '$1000 - $1500', '> $1500'), 
                                         breaks = c(min(X1), 500, 1000, 1500, max(X1))))
 
 price2Bed2Baths <- ggmap(nyc_map) + geom_polygon(aes(x=long, y=lat, group=group, fill = binPrice), 
                                                  size=.2, color="black", 
                                                  data = filter(prices, bedrooms == 2 & baths == 2), alpha=.8) + 
-  ggtitle("Predicted Price of 2BR/2BR Apts by District\n") + 
+  ggtitle("Predicted Price of 2BR/2BA Apts by District\n") + 
   scale_fill_brewer(palette = "RdBu") + guides(fill = guide_legend(title = "Price Per Square Ft")) +
   xlab('') + ylab('') + 
   theme(axis.ticks = element_blank(), axis.text.x=element_blank(), axis.text.y = element_blank(),
