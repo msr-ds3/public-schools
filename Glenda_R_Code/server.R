@@ -10,6 +10,7 @@ library(leaflet)
 library(ggmap)
 library(dplyr)
 library(raster)
+library(stringr)
 
 #HW:##################!! Remaind Jake and Amit to host the app!! ##############
 #HW2: Make stable NYC map for the price averages the price search location 
@@ -33,31 +34,24 @@ shinyServer(
     
     # Get school boundaries from NYC opendata shapefiles
     school_zone_boundaries <- create_school_mapdata(filepath, shapefile)
-    school_zone_df <-fortify(school_zone_boundaries)
     myZone <- school_zone_boundaries$DBN
-    #school_zone_boundaries$price <- school_zone_boundaries@data$avg_price
   
     
-    sum_ga <- ga %>% 
-      group_by(DBN) %>% 
-      summarise(mean_price = mean(avg_price), 
-                neighborhood_str = paste0(paste(paste(bedrooms, baths, sep=""), avg_price, sep=":"), 
-                                          collapse = "", sep = "<br>"))
-    
-    ## create a school_ga variable to joins the school zone boundaries with the ga file by the DBN   
-    schools_ga<- left_join(school_zone_boundaries@data, sum_ga, by="DBN")
-    myprice <- schools_ga$price
+    ga$bedbath = paste(ga$bedrooms, ga$baths, sep="")
     
        
 #########################################################################################
                             ####  Creating different tabs ####
 #########################################################################################
 ## first tab: Tab for finding the average price    
+    casted_ga <- dcast(ga, DBN~bedbath, value.var="avg_price")
+    ## create a school_ga variable to joins the school zone boundaries with the ga file by the DBN   
+    schools_ga<- left_join(school_zone_boundaries@data, casted_ga, by="DBN")
     
     ## Create a continuous palette function that changes the average price map color
     pal1 <- colorNumeric(  ## 1 = yellow, 2 = dark green, 3=pink,  4 = blue
       palette = c("#ffeb3b","#33e77f" , "#f66196", "#3d5afe"),
-      domain = myprice
+      domain = ga$avg_price
     )
     
     ## Plot the average price per school boundary
@@ -74,20 +68,19 @@ shinyServer(
         ) %>%
         addPolygons(
           data= school_zone_boundaries, 
-          weight = 2, 
-          smoothFactor = 0.2, fillOpacity = .5,
-          fillColor="grey",
-      
-      #    color = ~pal1(schools_ga[schools_ga$bedrooms == input$bedrooms & 
-      #                              schools_ga$baths == input$baths,]$avg_price), 
-          popup=paste0("<strong>Name:</strong>", school_zone_boundaries$DBN)#, "<strong> \nPrice:$</strong>", 
-      #                 schools_ga[schools_ga$bedrooms == input$bedrooms & 
-      #                              schools_ga$baths == input$baths,]$avg_price
-      #               )
+          weight = 1, 
+          smoothFactor = 0.2, fillOpacity = .7,
+          fillColor = ~pal1(schools_ga[,paste(input$bedrooms, input$baths, sep="")]), 
+          popup=paste0("<strong>Name: </strong>", school_zone_boundaries$DBN, "<strong> \nPrice: </strong>$", 
+                      format(round(schools_ga[,paste(input$bedrooms, input$baths, sep="")],2),nsmall=2), sep=""
+                     )
       )
     })
     
 ### Second tab
+    casted_ga2 <- dcast(ga, DBN~bedbath, value.var="med_price")
+    ## create a school_ga variable to joins the school zone boundaries with the ga file by the DBN   
+    schools_ga2<- left_join(school_zone_boundaries@data, casted_ga2, by="DBN")
     
     #school_zone_boundaries$med_price <- school_zone_boundaries@data$med_price
     #my_med_price <- school_zone_boundaries$med_price
@@ -95,7 +88,7 @@ shinyServer(
     ## Create a continuous palette function that changes the average price map color
     pal2 <- colorNumeric(
       palette = c("#ffeb3b","#33e77f" , "#f66196", "#3d5afe"),
-      domain = schools_ga$med_price
+      domain = ga$med_price
     )
     
     ## Plot the average price per school boundary
@@ -112,30 +105,31 @@ shinyServer(
         ) %>%
         addPolygons(
           data= school_zone_boundaries, 
-          weight = 2, 
-          smoothFactor = 0.2, fillOpacity = .5,
-          color = ~pal2(schools_ga[schools_ga$bedrooms == input$bedrooms & 
-                                    schools_ga$baths == input$baths,]$med_price), 
-          popup=paste0("<strong>Name:</strong>", myZone, "<strong> \nPrice:$</strong>", 
-                       format(round(schools_ga[schools_ga$bedrooms == input$bedrooms & 
-                                                 schools_ga$baths == input$baths,]$avg_price, 2), nsmall = 2)
+          weight = 1, 
+          smoothFactor = 0.2, fillOpacity = .7,
+          fillColor = ~pal2(schools_ga2[,paste(input$bedrooms, input$baths, sep="")]), 
+          popup=paste0("<strong>Name: </strong>", school_zone_boundaries$DBN, "<strong> \nPrice: </strong>$", 
+                       format(round(schools_ga2[,paste(input$bedrooms, input$baths, sep="")],2),nsmall=2)
+          
           )
         )
     })
     
 ## Third Tab  
-    x <- fakeDataWPremiums %>% 
+    grouped_fake <- fakeDataWPremiums %>% 
       group_by(DBN, bedrooms, baths) %>% 
       summarise(premium_avg = mean(premium), 
                 negborhood_str = paste0(paste(neighborhood,  format(round(premium, 2), nsmall = 2), sep = ": "), 
                                         collapse = "", sep = "<br>"))
     ## Join the school zone boundaries@data with the premium average price by DBN
-    schools_fake <- left_join(school_zone_boundaries@data, x, by="DBN")
+    grouped_fake$bedbath = paste(grouped_fake$bedrooms, grouped_fake$baths, sep="")
+    casted_fake <- dcast(grouped_fake, DBN~bedbath, value.var="premium_avg" )
+    schools_fake <- left_join(school_zone_boundaries@data, casted_fake, by="DBN")
 
-    ## Define the pap2
+    ## Define the pal3
     pal3 <- colorNumeric(
       palette = c("#ffeb3b","#33e77f" , "#f66196", "#3d5afe"),
-      domain = schools_fake$premium
+      domain = grouped_fake$premium_avg
     )
     
     output$premium_map <- renderLeaflet({
@@ -150,14 +144,12 @@ shinyServer(
         ) %>%
         addPolygons(
           data=school_zone_boundaries, 
-          weight = 2, 
-          smoothFactor = 0.2, fillOpacity = .5,
-          color = ~pal3(schools_fake[schools_fake$bedrooms == input$bedrooms & 
-                                    schools_fake$baths == input$baths,]$premium), 
-          popup=paste0("<strong>Name:</strong>", myZone, "<br /><strong> \nPrice:$</strong>", 
-                       format(round(schools_fake[schools_fake$bedrooms == input$bedrooms & 
-                                                   schools_fake$baths == input$baths,]$premium, 2), 
-                              nsmall = 2), schools_fake$negborhood_str
+          weight = 1, 
+          smoothFactor = 0.2, fillOpacity = .7,
+          fillColor = ~pal3(schools_fake[,paste(input$bedrooms, input$baths, sep="")]), 
+          popup=paste0("<strong>Name: </strong>", school_zone_boundaries$DBN, "<strong> \nPremium: </strong>$", 
+                       format(round(schools_fake[,paste(input$bedrooms, input$baths, sep="")],2),nsmall=2)
+                       
           )
         )
       
