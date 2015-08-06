@@ -15,16 +15,8 @@ library(raster)
 #HW2: Make stable NYC map for the price averages the price search location 
 
 ### Loading the required dataframes for the shiny application
-load("~/public-schools/Glenda_R_Code/shiny_app_df.RData")
-load("~/public-schools/Glenda_R_Code/fakeDataWPremiums.RData")
-
-## Making a function that reads the ga dataframe and joins the new boundaries
-getPrice <- function(zone_boundaries,ga, beds, bath) {
-  newga <- filter(ga, bedrooms == beds, baths == bath)
-  zone_boundaries@data <- join(zone_boundaries@data, newga)
-  paste(new_boundaries$avg_price, sep = " ", collapse = "")
-  return(zone_boundaries)
-}
+load("../Glenda_R_Code/shiny_app_df.RData")
+load("../Glenda_R_Code/fakeDataWPremiums.RData")
 
 ### Create the server.R for computation purposes
 shinyServer(
@@ -41,15 +33,22 @@ shinyServer(
     
     # Get school boundaries from NYC opendata shapefiles
     school_zone_boundaries <- create_school_mapdata(filepath, shapefile)
-    
+    school_zone_df <-fortify(school_zone_boundaries)
     myZone <- school_zone_boundaries$DBN
-    school_zone_boundaries$price <- school_zone_boundaries@data$avg_price
-    myprice <- school_zone_boundaries$price
+    #school_zone_boundaries$price <- school_zone_boundaries@data$avg_price
+  
+    
+    sum_ga <- ga %>% 
+      group_by(DBN) %>% 
+      summarise(mean_price = mean(avg_price), 
+                neighborhood_str = paste0(paste(paste(bedrooms, baths, sep=""), avg_price, sep=":"), 
+                                          collapse = "", sep = "<br>"))
     
     ## create a school_ga variable to joins the school zone boundaries with the ga file by the DBN   
-    schools_ga<- left_join(school_zone_boundaries@data, ga, by="DBN")
+    schools_ga<- left_join(school_zone_boundaries@data, sum_ga, by="DBN")
+    myprice <- schools_ga$price
     
-   
+       
 #########################################################################################
                             ####  Creating different tabs ####
 #########################################################################################
@@ -63,7 +62,7 @@ shinyServer(
     
     ## Plot the average price per school boundary
     output$mymap <- renderLeaflet({
-      leaflet() %>% 
+      leaflet(school_zone_boundaries) %>% 
         setView(lng = geocode(input$address)[,1],
                 lat = as.numeric(geocode(input$address)[,2]), 
                 zoom = 10)  %>%
@@ -77,24 +76,26 @@ shinyServer(
           data= school_zone_boundaries, 
           weight = 2, 
           smoothFactor = 0.2, fillOpacity = .5,
-          color = ~pal1(schools_ga[schools_ga$bedrooms == input$bedrooms & 
-                                    schools_ga$baths == input$baths,]$avg_price), 
-          popup=paste0("<strong>Name:</strong>", myZone, "<strong> \nPrice:$</strong>", 
-                       format(round(schools_ga[schools_ga$bedrooms == input$bedrooms & 
-                                                 schools_ga$baths == input$baths,]$avg_price, 2), nsmall = 2)
-                     )
-        )
+          fillColor="grey",
+      
+      #    color = ~pal1(schools_ga[schools_ga$bedrooms == input$bedrooms & 
+      #                              schools_ga$baths == input$baths,]$avg_price), 
+          popup=paste0("<strong>Name:</strong>", school_zone_boundaries$DBN)#, "<strong> \nPrice:$</strong>", 
+      #                 schools_ga[schools_ga$bedrooms == input$bedrooms & 
+      #                              schools_ga$baths == input$baths,]$avg_price
+      #               )
+      )
     })
     
 ### Second tab
     
-    school_zone_boundaries$med_price <- school_zone_boundaries@data$med_price
-    my_med_price <- school_zone_boundaries$med_price
+    #school_zone_boundaries$med_price <- school_zone_boundaries@data$med_price
+    #my_med_price <- school_zone_boundaries$med_price
     
     ## Create a continuous palette function that changes the average price map color
     pal2 <- colorNumeric(
       palette = c("#ffeb3b","#33e77f" , "#f66196", "#3d5afe"),
-      domain = my_med_price
+      domain = schools_ga$med_price
     )
     
     ## Plot the average price per school boundary
@@ -117,7 +118,7 @@ shinyServer(
                                     schools_ga$baths == input$baths,]$med_price), 
           popup=paste0("<strong>Name:</strong>", myZone, "<strong> \nPrice:$</strong>", 
                        format(round(schools_ga[schools_ga$bedrooms == input$bedrooms & 
-                                                 schools_ga$baths == input$baths,]$med_price, 2), nsmall = 2)
+                                                 schools_ga$baths == input$baths,]$avg_price, 2), nsmall = 2)
           )
         )
     })
