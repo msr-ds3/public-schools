@@ -202,7 +202,7 @@ xF = model.matrix(I(price/sqft) ~ baths + meanScores  + `% Poverty` + `% White` 
 fakeDataPred <- predict(cvfit, newx = xF, s = "lambda.min")
 
 ## Remove unnecessary dfs
-m(baths, beds, price, sqft, sold_listings, complete_listings, schooldata)
+rm(baths, beds, price, sqft, sold_listings, complete_listings, schooldata)
 
 ## Change predictions to easy view
 fakeDataPred <- data.frame(fakeDataPred)
