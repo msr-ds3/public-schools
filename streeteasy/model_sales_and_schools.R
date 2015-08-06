@@ -121,6 +121,21 @@ actualVsPredicted <- ggplot(data = pred, aes(x = X1, y = yT)) +
 ggsave(actualVsPredicted, file = "../figures/actualVsPredicted.pdf", width = 5, height = 5)
 ggsave(actualVsPredicted, file = "../figures/actualVsPredicted.png", width = 5, height = 5)
 
+## Actual Vs Predicted Price for Test Data, grouped by DBN
+plot_data <- pred %>%
+  group_by(DBN, neighborhood, borough) %>%
+  summarize(X1=mean(X1), yT=mean(yT))
+actualVsPredictedbyDBN <- ggplot(data = plot_data, aes(x = X1, y = yT, color=borough)) + 
+  geom_point() +
+  geom_abline(intercept=0, slope=1, linetype = 'dashed')+
+  scale_x_continuous('\nPredicted Price Per Sq Ft', limits = range(plot_data$yT), label = dollar) + 
+  scale_y_continuous('Actual Price Per Sq Ft\n', limits = range(plot_data$yT), label = dollar) +
+  ggtitle('Actual vs Predicted Price\n') +
+  theme_bw() +
+  theme(legend.position=c(0.2,0.8), legend.title=element_blank())
+
+ggsave(actualVsPredictedbyDBN, file = "../figures/actualVsPredictedbyDBN.pdf", width = 5, height = 5)
+ggsave(actualVsPredictedbyDBN, file = "../figures/actualVsPredictedbyDBN.png", width = 5, height = 5)
 
 #################################################################
 # Plotting the stratification of predictions on real test data  #
