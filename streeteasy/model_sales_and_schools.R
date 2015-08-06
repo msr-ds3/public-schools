@@ -226,22 +226,17 @@ fakeDataPred <- data.frame(fakeDataPred)
 testWPred <- cbind(fakeTest, fakeDataPred)
 
 ## Get only the relevant data needed to make the premiums, summarize on avg
-fakeDataWPremiums <- testWPred %>% group_by(neighborhood, borough, bedrooms, baths) %>% summarize(meanPrediction = mean(X1))
+fakeDataForPremiums <- testWPred %>% group_by(DBN, bedrooms, baths) %>% summarize(meanPrediction = mean(X1))
 
-## Join the premiums to the full fake data set
-fakeDataWPremiums <- inner_join(testWPred, fakeDataWPremiums)
-
-## Add a premium column with the predictions minus the average in that area
-fakeDataWPremiums$premium <- fakeDataWPremiums$X1 - fakeDataWPremiums$meanPrediction
-View(fakeDataWPremiums)
-
-## Save for plotting
-save(fakeDataWPremiums, file = "fakeDataWPremiums.RData")
-
+<<<<<<< HEAD
 # compare park slope 282 vs 321 example for talk
 filter(fakeDataWPremiums, neighborhood == "Park Slope" & DBN == "13K282" & bedrooms == 2 & baths == 2) %>% select(X1)
 filter(fakeDataWPremiums, neighborhood == "Park Slope" & DBN == "15K321" & bedrooms == 2 & baths == 2) %>% select(X1)
 
+=======
+## Save to grab premiums from in adj_zones.R.
+save(fakeDataForPremiums, file = "fakeDataForPremiums.RData")
+>>>>>>> 6f853200aacd6e0df2d6012d3bebcd3791268234
 
 ####################################################
 #  For GGplots with Stratification by Bedroom Amt  #
