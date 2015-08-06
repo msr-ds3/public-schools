@@ -6,7 +6,7 @@ library(glmnet)
 library(broom)
 library(reshape2)
 ## Load the data for modeling
-load('complete_data.RData')
+load('compl  .RData')
 
 df <- schools_zone_sales
 

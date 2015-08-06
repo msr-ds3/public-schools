@@ -6,11 +6,11 @@
 ##################################################################################################
 
 ## Setting the working directory
-setwd("~/public-schools/Glenda_R_Code")
+#setwd("Glenda_R_Code")
 
 ### Load the packages and data
 library(shiny)
-library(plotGoogleMaps)
+#library(plotGoogleMaps)
 library(leaflet)
 library(ggmap) #geocoding
 library(dplyr)
