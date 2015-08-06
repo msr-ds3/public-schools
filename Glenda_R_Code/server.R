@@ -11,9 +11,7 @@ library(ggmap)
 library(dplyr)
 library(raster)
 library(stringr)
-
-#HW:##################!! Remaind Jake and Amit to host the app!! ##############
-#HW2: Make stable NYC map for the price averages the price search location 
+library(reshape2) 
 
 ### Loading the required dataframes for the shiny application
 load("../Glenda_R_Code/shiny_app_df.RData")
@@ -23,7 +21,7 @@ load("../Glenda_R_Code/fakeDataWPremiums.RData")
 shinyServer(
   function(input, output, session) {
     
-    ##outputs on the main panel what the user inputs ==> I took it out :D
+    ## Outputs on the main panel what the user inputs ==> I took it out :D
     output$mylongitude <- reactive({as.numeric(geocode(input$address)[,1])})
     output$mylatitude <- reactive({as.numeric(geocode(input$address)[,2])})
     
