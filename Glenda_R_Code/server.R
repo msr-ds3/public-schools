@@ -131,12 +131,13 @@ shinyServer(
     )
     
     output$premium_map <- renderLeaflet({
-      leaflet() %>% 
-        setView(lng=-74.0059, 
-                lat=40.7127,
-                zoom = 10) %>%
+      leaflet() %>%
+        setView(lng = geocode(input$address)[,1],
+                lat = as.numeric(geocode(input$address)[,2]), 
+                zoom = 10)  %>%
         addTiles() %>%
-        addMarkers(lng=-74.0059, lat=40.7127, 
+        addMarkers(as.numeric(geocode(input$address)[,1]), 
+                   as.numeric(geocode(input$address)[,2]), 
                    #when the users hovers throuh every school district shows the av_price 
                    popup="Your Premium Price"
         ) %>%
@@ -149,6 +150,7 @@ shinyServer(
                        format(round(schools_fake[,paste(input$bedrooms, input$baths, sep="")],2),nsmall=2)
                        
           )
+          
         )
       
     })
