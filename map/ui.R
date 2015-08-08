@@ -1,7 +1,9 @@
 
-## By:Glenda A
+### By: Glenda Ascencio                                                  August 6, 2015
+
+##Microsoft Research Data Summer School##
 ##################################################################################################
-            ## A ui.R ui ==> controls the layout, apperiance, and widgets 33 ##
+            ## A ui.R ui ==> controls the layout, apperiance, and widgets ##
 ##################################################################################################
 
 ### Loading the required libraries
@@ -34,6 +36,8 @@ shinyUI(fluidPage(
         tabPanel("Price Average", leafletOutput("mymap")), 
         tabPanel("Median Price", leafletOutput("median_map")),
         tabPanel("Premium Price", leafletOutput("premium_map"))
+        
+        
       )
     )
   )

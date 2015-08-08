@@ -1,4 +1,8 @@
 
+### By: Glenda Ascencio                                                  August 6, 2015
+
+                      ##Microsoft Research Data Summer School##
+
 ##############################################################################################
 #######   Create the server.R for computation purposes: It uses the input provided by  #######
 ####### the user process them and produces the required output displayed by ui.r script  #####
@@ -38,6 +42,7 @@ shinyServer(
     ## Outputs on the main panel what the user inputs ==> I took it out :D
     output$mylongitude <- reactive({as.numeric(geocode(input$address)[,1])})
     output$mylatitude <- reactive({as.numeric(geocode(input$address)[,2])})
+    output$mylongitude <- reactive({
     
     ## Goes through the geocoding folder and find uses the folders we want to use
     
